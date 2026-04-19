@@ -7,26 +7,35 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Coffee.Data;
 using Coffee.Models;
+using Coffee.Services;
 
 namespace Coffee.Controllers
 {
     public class AdminProductsController : Controller
     {
         private readonly CoffeeShopDbContext _context;
+        private readonly CloudinaryService _cloudinary;
 
-        public AdminProductsController(CoffeeShopDbContext context)
+        public AdminProductsController(
+            CoffeeShopDbContext context,
+            CloudinaryService cloudinary)
         {
             _context = context;
+            _cloudinary = cloudinary;
         }
 
+        // =========================
         // 📦 LIST
+        // =========================
         public async Task<IActionResult> Index()
         {
             var products = _context.Products.Include(p => p.Category);
             return View(await products.ToListAsync());
         }
 
+        // =========================
         // 🔍 DETAILS
+        // =========================
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -40,7 +49,9 @@ namespace Coffee.Controllers
             return View(product);
         }
 
+        // =========================
         // ➕ CREATE (GET)
+        // =========================
         public IActionResult Create()
         {
             ViewData["CategoryId"] = new SelectList(
@@ -48,65 +59,24 @@ namespace Coffee.Controllers
             return View();
         }
 
-        // ➕ CREATE (POST)
+        // =========================
+        // ➕ CREATE (POST - CLOUDINARY)
+        // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product, IFormFile? file)
         {
-            // ===== XỬ LÝ ẢNH =====
             if (file != null && file.Length > 0)
             {
-                // ✔ check định dạng
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                var ext = Path.GetExtension(file.FileName).ToLower();
-
-                if (!allowedExtensions.Contains(ext))
-                {
-                    ModelState.AddModelError("", "Chỉ cho phép file ảnh (.jpg, .png, ...)");
-                }
-                // ✔ check dung lượng (max 2MB)
-                else if (file.Length > 2 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("", "Ảnh phải nhỏ hơn 2MB");
-                }
-                else
-                {
-                    // ✔ đảm bảo thư mục tồn tại
-                    var folder = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        "img",
-                        "Products"
-                    );
-
-                    if (!Directory.Exists(folder))
-                    {
-                        Directory.CreateDirectory(folder);
-                    }
-
-                    // ✔ tạo tên file random
-                    var fileName = Guid.NewGuid().ToString() + ext;
-
-                    var path = Path.Combine(folder, fileName);
-
-                    // ✔ lưu file
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    // ✔ lưu đường dẫn DB
-                    product.ImageUrl = "/img/Products/" + fileName;
-                }
+                var url = await _cloudinary.UploadImageAsync(file);
+                product.ImageUrl = url;
             }
 
-            // 👉 nếu không chọn ảnh → ảnh mặc định
             if (string.IsNullOrEmpty(product.ImageUrl))
             {
                 product.ImageUrl = "/img/default.png";
             }
 
-            // ===== SAVE DB =====
             if (ModelState.IsValid)
             {
                 _context.Add(product);
@@ -114,7 +84,6 @@ namespace Coffee.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // ===== LOAD LẠI DROPDOWN =====
             ViewData["CategoryId"] = new SelectList(
                 _context.Categories,
                 "CategoryId",
@@ -124,7 +93,10 @@ namespace Coffee.Controllers
 
             return View(product);
         }
+
+        // =========================
         // ✏️ EDIT (GET)
+        // =========================
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -133,12 +105,17 @@ namespace Coffee.Controllers
             if (product == null) return NotFound();
 
             ViewData["CategoryId"] = new SelectList(
-                _context.Categories, "CategoryId", "CategoryName", product.CategoryId);
+                _context.Categories,
+                "CategoryId",
+                "CategoryName",
+                product.CategoryId);
 
             return View(product);
         }
 
-        // ✏️ EDIT (POST)
+        // =========================
+        // ✏️ EDIT (POST - CLOUDINARY)
+        // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Product product, IFormFile? file)
@@ -153,49 +130,17 @@ namespace Coffee.Controllers
             if (oldProduct == null)
                 return NotFound();
 
-            // ===== XỬ LÝ ẢNH =====
+            // ===== UPLOAD NEW IMAGE =====
             if (file != null && file.Length > 0)
             {
-                // 👉 XÓA ẢNH CŨ
-                if (!string.IsNullOrEmpty(oldProduct.ImageUrl))
-                {
-                    var oldPath = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        oldProduct.ImageUrl.TrimStart('/')
-                    );
-
-                    if (System.IO.File.Exists(oldPath))
-                    {
-                        System.IO.File.Delete(oldPath);
-                    }
-                }
-
-                // 👉 LƯU ẢNH MỚI
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-
-                var newPath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    "img",
-                    "Products",
-                    fileName
-                );
-
-                using (var stream = new FileStream(newPath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                product.ImageUrl = "/img/Products/" + fileName;
+                var url = await _cloudinary.UploadImageAsync(file);
+                product.ImageUrl = url;
             }
             else
             {
-                // 👉 GIỮ ẢNH CŨ
                 product.ImageUrl = oldProduct.ImageUrl;
             }
 
-            // ===== SAVE DB =====
             if (ModelState.IsValid)
             {
                 try
@@ -214,7 +159,6 @@ namespace Coffee.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // ===== LOAD LẠI DROPDOWN =====
             ViewData["CategoryId"] = new SelectList(
                 _context.Categories,
                 "CategoryId",
@@ -225,7 +169,9 @@ namespace Coffee.Controllers
             return View(product);
         }
 
+        // =========================
         // ❌ DELETE (GET)
+        // =========================
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -239,17 +185,18 @@ namespace Coffee.Controllers
             return View(product);
         }
 
+        // =========================
         // ❌ DELETE (POST)
+        // =========================
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // 🔥 check có trong giỏ hàng không
             var isInCart = _context.Carts.Any(c => c.ProductId == id);
 
             if (isInCart)
             {
-                TempData["Error"] = "❌ Món này đang có trong giỏ hàng, không thể xoá!";
+                TempData["Error"] = "❌ Sản phẩm đang có trong giỏ hàng!";
                 return RedirectToAction(nameof(Index));
             }
 

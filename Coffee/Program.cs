@@ -1,5 +1,6 @@
 ﻿using Coffee.Data;
 using Coffee.Models;
+using Coffee.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,9 @@ internal class Program
         var myConnectionString = builder.Configuration.GetConnectionString("MyConnectString");
         builder.Services.AddDbContext<CoffeeShopDbContext>(options =>
             options.UseNpgsql(myConnectionString));
+
+        // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
+        builder.Services.AddSingleton<CloudinaryService>();
 
         // =========================
         // 🔐 COOKIE AUTH (QUAN TRỌNG)

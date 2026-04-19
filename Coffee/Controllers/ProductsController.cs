@@ -1,6 +1,7 @@
 ﻿using Coffee.Data;
 using Coffee.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Coffee.Controllers
 {
@@ -14,23 +15,23 @@ namespace Coffee.Controllers
         }
 
         // =========================
-        // 📦 PRODUCT LIST + PAGINATION + FILTER
+        // 📦 PRODUCT LIST + FILTER + PAGINATION
         // =========================
-        public IActionResult Index(int page = 1, int? loai = null)
+        public async Task<IActionResult> Index(int page = 1, int? loai = null)
         {
             int pageSize = 8;
 
             var query = db.Products.AsQueryable();
 
-            // 🔥 filter theo loại
+            // 🔥 FILTER CATEGORY
             if (loai.HasValue)
             {
                 query = query.Where(p => p.CategoryId == loai.Value);
             }
 
-            int totalItems = query.Count();
+            var totalItems = await query.CountAsync();
 
-            var products = query
+            var products = await query
                 .OrderByDescending(p => p.ProductId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -38,11 +39,11 @@ namespace Coffee.Controllers
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = p.Price ?? 0,
+                    Price = p.Price.GetValueOrDefault(),
                     Description = p.Description,
-                    ImageUrl = p.ImageUrl ?? ""
+                    ImageUrl = p.ImageUrl ?? string.Empty
                 })
-                .ToList();
+                .ToListAsync();
 
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
@@ -51,25 +52,26 @@ namespace Coffee.Controllers
             return View(products);
         }
 
-
         // =========================
         // 🔍 SEARCH + PAGINATION
         // =========================
-        public IActionResult Search(string? query, int page = 1)
+        public async Task<IActionResult> Search(string? query, int page = 1)
         {
             int pageSize = 8;
 
             var productsQuery = db.Products.AsQueryable();
 
-            if (!string.IsNullOrEmpty(query))
+            if (!string.IsNullOrWhiteSpace(query))
             {
-                productsQuery = productsQuery
-                    .Where(p => p.ProductName.Contains(query));
+                query = query.ToLower();
+
+                productsQuery = productsQuery.Where(p =>
+                    p.ProductName.ToLower().Contains(query));
             }
 
-            int totalItems = productsQuery.Count();
+            var totalItems = await productsQuery.CountAsync();
 
-            var result = productsQuery
+            var result = await productsQuery
                 .OrderByDescending(p => p.ProductId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -77,11 +79,11 @@ namespace Coffee.Controllers
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = p.Price ?? 0,
+                    Price = p.Price.GetValueOrDefault(),
                     Description = p.Description,
-                    ImageUrl = p.ImageUrl ?? ""
+                    ImageUrl = p.ImageUrl ?? string.Empty
                 })
-                .ToList();
+                .ToListAsync();
 
             ViewBag.Query = query;
             ViewBag.CurrentPage = page;
@@ -90,23 +92,22 @@ namespace Coffee.Controllers
             return View(result);
         }
 
-
         // =========================
-        // 🔍 DETAIL
+        // 🔍 DETAIL PRODUCT
         // =========================
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var product = db.Products
+            var product = await db.Products
                 .Where(p => p.ProductId == id)
                 .Select(p => new ProductDTO
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = p.Price ?? 0,
+                    Price = p.Price.GetValueOrDefault(),
                     Description = p.Description,
-                    ImageUrl = p.ImageUrl ?? ""
+                    ImageUrl = p.ImageUrl ?? string.Empty
                 })
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             if (product == null)
                 return NotFound();
