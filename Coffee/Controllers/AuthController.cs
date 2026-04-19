@@ -32,35 +32,46 @@ namespace Coffee.Controllers
             if (!ModelState.IsValid)
                 return View(dto);
 
-            // ❌ Email trùng
-            if (db.Users.Any(x => x.Email == dto.Email))
+            try
             {
-                ModelState.AddModelError("Email", "Email đã tồn tại!");
-                return View(dto);
+                // check email
+                if (db.Users.Any(x => x.Email == dto.Email))
+                {
+                    ModelState.AddModelError("Email", "Email đã tồn tại!");
+                    return View(dto);
+                }
+
+                // check username
+                if (db.Users.Any(x => x.UserName == dto.Username))
+                {
+                    ModelState.AddModelError("Username", "Username đã tồn tại!");
+                    return View(dto);
+                }
+
+                var user = new User
+                {
+                    UserName = dto.Username,
+                    Email = dto.Email,
+
+                    // ⚠️ FIX: hash 1 lần duy nhất
+                    Password = hasher.Hash(dto.Password),
+
+                    RoleId = 2,
+                    IsActive = true,
+                    IsLocked = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                db.Users.Add(user);
+                db.SaveChanges();
+
+                return RedirectToAction("Login");
             }
-
-            // ❌ Username trùng
-            if (db.Users.Any(x => x.UserName == dto.Username))
+            catch (Exception ex)
             {
-                ModelState.AddModelError("Username", "Username đã tồn tại!");
-                return View(dto);
+                // 🔥 QUAN TRỌNG: show lỗi thật trên Render
+                return Content($"ERROR REGISTER: {ex.InnerException?.Message ?? ex.Message}");
             }
-
-            var user = new User
-            {
-                UserName = dto.Username,
-                Email = dto.Email,
-                Password = hasher.Hash(dto.Password),
-                RoleId = 2, // user
-                IsActive = true,
-                IsLocked = false,
-                CreatedAt = DateTime.Now
-            };
-
-            db.Users.Add(user);
-            db.SaveChanges();
-
-            return RedirectToAction("Login");
         }
 
         // =========================
