@@ -1,6 +1,7 @@
 ﻿using Coffee.Data;
-using Microsoft.EntityFrameworkCore;
+using Coffee.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 
 internal class Program
 {
@@ -29,6 +30,26 @@ internal class Program
             });
 
         var app = builder.Build();
+
+        // =========================
+        // 🔥 SEED DATA (THÊM Ở ĐÂY)
+        // =========================
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+
+            db.Database.Migrate(); // đảm bảo tạo DB trước
+
+            if (!db.Roles.Any())
+            {
+                db.Roles.AddRange(
+                    new Role { RoleName = "Admin" },
+                    new Role { RoleName = "User" }
+                );
+
+                db.SaveChanges();
+            }
+        }
 
         // =========================
         // ⚙️ PIPELINE
