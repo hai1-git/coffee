@@ -25,7 +25,7 @@ public partial class User
 
     public string? LockReason { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 

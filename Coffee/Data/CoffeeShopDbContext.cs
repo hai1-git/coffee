@@ -63,8 +63,8 @@ public partial class CoffeeShopDbContext : DbContext
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCFD629F690");
 
             entity.Property(e => e.OrderDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+    .HasColumnType("timestamp")
+    .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(10, 2)");
 
@@ -129,8 +129,8 @@ public partial class CoffeeShopDbContext : DbContext
 
             entity.Property(e => e.Address).HasMaxLength(200);
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+    .HasColumnType("timestamp")
+    .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.UserName).HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
