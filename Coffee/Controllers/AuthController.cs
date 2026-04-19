@@ -56,7 +56,7 @@ namespace Coffee.Controllers
                     // ⚠️ FIX: hash 1 lần duy nhất
                     Password = hasher.Hash(dto.Password),
 
-                    RoleId = 2,
+                    RoleId = 1,
                     IsActive = true,
                     IsLocked = false,
                     CreatedAt = DateTime.UtcNow
