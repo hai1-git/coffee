@@ -57,6 +57,13 @@ internal class Program
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
+        // 👉 AUTO MIGRATE
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+            db.Database.Migrate();
+        }
+
         app.Run();
     }
 }
