@@ -1,0 +1,32 @@
+﻿@model IEnumerable<Coffee.DTO.CategoryDTO>
+@{
+    ViewData["Title"] = "Default";
+}
+
+<div class="category-wrapper">
+    <h4 class="category-title">☕ Danh Mục</h4>
+
+    <ul class="category-list">
+        @foreach (var c in Model)
+        {
+            <li class="category-item">
+                <a asp-controller="Products"
+                   asp-action="Index"
+                   asp-route-loai="@c.Id"
+                   class="category-link">
+
+                    <span class="icon">
+                        <i class="fas fa-coffee"></i>
+                    </span>
+
+                    <span class="name">@c.Name</span>
+
+                    <span class="arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+
+                </a>
+            </li>
+        }
+    </ul>
+</div>

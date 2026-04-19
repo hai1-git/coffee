@@ -1,0 +1,28 @@
+﻿@model IEnumerable<Coffee.DTO.ProductDTO>
+
+@{
+    ViewData["Title"] = "Search";
+    Layout = "_ProductsCoffee";
+}
+@* phần đầu *@
+@await Html.PartialAsync("_Header")
+
+
+<div class="d-flex mt-4">
+    @* loại sản phẩm *@
+    <div class="d-flex flex-column col-lg-3">
+        @await Component.InvokeAsync("Categories", Model)
+        @await Component.InvokeAsync("Products", new { count = 1 })
+
+    </div>
+
+
+
+    @* sản phẩm *@
+    @await Html.PartialAsync("_Products", Model)
+
+</div>
+
+@section Scripts {
+    <script src="~/js/Products/Products.js"></script>
+}

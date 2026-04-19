@@ -1,0 +1,18 @@
+﻿<div class="d-flex align-items-center justify-content-around">
+    <div class="">
+        <a href="/" class="btn-back-home">
+            <i class="fas fa-long-arrow-alt-left"></i> Back to Home
+        </a>
+    </div>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+
+        <a href="/Cart">
+            🛒 Giỏ hàng
+            <span class="badge bg-danger cart-count">0</span>
+        </a>
+    }
+    @* Search *@
+    @await Html.PartialAsync("_Search")
+</div>

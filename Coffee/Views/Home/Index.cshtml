@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@section Css {
+    <link rel="stylesheet" href="~/css/Products/product.css" />
+}
+<!-- Sản Phẩm -->
+<h2 class="text-center">Best Seller</h2>
+@await Component.InvokeAsync("Products")
+<!-- Sản Phẩm End -->
+
+<!-- About Start -->
+@await Html.PartialAsync("_About")
+<!-- About End -->
+
+<!-- Service Start -->
+@await Html.PartialAsync("_Service")
+<!-- Service End -->
+
+<!-- Offer Start -->
+@await Html.PartialAsync("_Offer")
+<!-- Offer End -->
+
+<!-- Reservation Start -->
+@await Html.PartialAsync("_Reservation")
+<!-- Reservation End -->
+
+<!-- Testimonial Start -->
+@await Html.PartialAsync("_Testimonial")
+<!-- Testimonial End -->
+@section Scripts {
+    <script src="~/js/Products/count.js"></script>
+}

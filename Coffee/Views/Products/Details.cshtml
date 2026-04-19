@@ -1,0 +1,77 @@
+﻿@model Coffee.DTO.ProductDTO
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="container py-5">
+
+    <div class="row g-5">
+
+        <!-- IMAGE -->
+        <div class="col-md-6">
+
+            <div class="border rounded-4 overflow-hidden shadow-sm">
+                <img src="@Model.ImageUrl"
+                     class="w-100"
+                     style="height:400px; object-fit:cover;">
+            </div>
+
+        </div>
+
+        <!-- INFO -->
+        <div class="col-md-6 d-flex flex-column">
+
+            <h2 class="fw-bold mb-3">
+                @Model.ProductName
+            </h2>
+
+            <p class="text-muted">
+                @Model.Description
+            </p>
+
+            <h3 class="text-danger fw-bold mb-4">
+                @Model.Price.ToString("N0") đ
+            </h3>
+
+            <!-- QTY -->
+            <div class="input-group mb-4" style="max-width:200px;">
+                <button class="btn btn-outline-secondary btn-minus">-</button>
+
+                <input type="text"
+                       class="form-control text-center quantity-input"
+                       value="1">
+
+                <button class="btn btn-outline-secondary btn-plus">+</button>
+            </div>
+
+            <!-- BUTTON -->
+            <div class="d-grid gap-3">
+
+                <button class="btn btn-dark btn-lg btn-add-cart"
+                        data-productid="@Model.Id">
+                    🛒 Thêm vào giỏ
+                </button>
+
+                <button class="btn btn-warning btn-lg fw-bold">
+                    ⚡ Thanh toán ngay
+                </button>
+
+                <a asp-controller="Products"
+                   asp-action="Index"
+                   class="btn btn-outline-dark">
+                    ← Quay lại sản phẩm
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/Products/count.js"></script>
+    <script src="~/js/Products/Products.js"></script>
+}

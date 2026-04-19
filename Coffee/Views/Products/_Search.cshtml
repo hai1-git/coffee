@@ -1,0 +1,14 @@
+﻿
+    <form asp-controller="Products" asp-action="Search" class="d-flex align-items-center" method="get">
+        <input class="form-control me-2 border-dark"
+               type="search"
+               name="query"
+               value="@ViewBag.Query"
+               placeholder="Tìm sản phẩm..."
+               aria-label="Search">
+
+        <button class="btn" type="submit">
+            🔍 Tìm
+        </button>
+    </form>
+
