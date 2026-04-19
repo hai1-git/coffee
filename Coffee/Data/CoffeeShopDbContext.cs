@@ -106,6 +106,9 @@ public partial class CoffeeShopDbContext : DbContext
             entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CD96392F1C");
 
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
+            // 👉 THÊM DÒNG NÀY
+            entity.Property(e => e.ImagePublicId)
+                .HasMaxLength(200);
             entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.ProductName).HasMaxLength(200);
 

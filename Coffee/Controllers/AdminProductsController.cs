@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -55,12 +54,15 @@ namespace Coffee.Controllers
         public IActionResult Create()
         {
             ViewData["CategoryId"] = new SelectList(
-                _context.Categories, "CategoryId", "CategoryName");
+                _context.Categories,
+                "CategoryId",
+                "CategoryName");
+
             return View();
         }
 
         // =========================
-        // ➕ CREATE (POST - CLOUDINARY)
+        // ➕ CREATE (POST)
         // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -68,8 +70,10 @@ namespace Coffee.Controllers
         {
             if (file != null && file.Length > 0)
             {
-                var url = await _cloudinary.UploadImageAsync(file);
-                product.ImageUrl = url;
+                var upload = await _cloudinary.UploadImageAsync(file);
+
+                product.ImageUrl = upload?.Url;
+                product.ImagePublicId = upload?.PublicId;
             }
 
             if (string.IsNullOrEmpty(product.ImageUrl))
@@ -88,8 +92,7 @@ namespace Coffee.Controllers
                 _context.Categories,
                 "CategoryId",
                 "CategoryName",
-                product.CategoryId
-            );
+                product.CategoryId);
 
             return View(product);
         }
@@ -114,7 +117,7 @@ namespace Coffee.Controllers
         }
 
         // =========================
-        // ✏️ EDIT (POST - CLOUDINARY)
+        // ✏️ EDIT (POST)
         // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -130,15 +133,24 @@ namespace Coffee.Controllers
             if (oldProduct == null)
                 return NotFound();
 
-            // ===== UPLOAD NEW IMAGE =====
+            // =========================
+            // 🖼 UPDATE IMAGE
+            // =========================
             if (file != null && file.Length > 0)
             {
-                var url = await _cloudinary.UploadImageAsync(file);
-                product.ImageUrl = url;
+                // ❌ xoá ảnh cũ trên cloud
+                await _cloudinary.DeleteImageAsync(oldProduct.ImagePublicId);
+
+                // 📤 upload ảnh mới
+                var upload = await _cloudinary.UploadImageAsync(file);
+
+                product.ImageUrl = upload?.Url;
+                product.ImagePublicId = upload?.PublicId;
             }
             else
             {
                 product.ImageUrl = oldProduct.ImageUrl;
+                product.ImagePublicId = oldProduct.ImagePublicId;
             }
 
             if (ModelState.IsValid)
@@ -163,8 +175,7 @@ namespace Coffee.Controllers
                 _context.Categories,
                 "CategoryId",
                 "CategoryName",
-                product.CategoryId
-            );
+                product.CategoryId);
 
             return View(product);
         }
@@ -192,6 +203,11 @@ namespace Coffee.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var product = await _context.Products.FindAsync(id);
+
+            if (product == null)
+                return NotFound();
+
             var isInCart = _context.Carts.Any(c => c.ProductId == id);
 
             if (isInCart)
@@ -200,13 +216,11 @@ namespace Coffee.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var product = await _context.Products.FindAsync(id);
+            // ❌ xoá ảnh cloudinary
+            await _cloudinary.DeleteImageAsync(product.ImagePublicId);
 
-            if (product != null)
-            {
-                _context.Products.Remove(product);
-                await _context.SaveChangesAsync();
-            }
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }

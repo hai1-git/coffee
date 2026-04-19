@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Coffee.DTO;
 
 namespace Coffee.Services
 {
@@ -9,7 +10,6 @@ namespace Coffee.Services
 
         public CloudinaryService(IConfiguration config)
         {
-            // ✅ Cách 2: GetSection (ổn định khi deploy Render)
             var cloudinaryConfig = config.GetSection("Cloudinary");
 
             var account = new Account(
@@ -22,9 +22,9 @@ namespace Coffee.Services
         }
 
         // =========================
-        // 📤 UPLOAD IMAGE
+        // 📤 UPLOAD
         // =========================
-        public async Task<string?> UploadImageAsync(IFormFile file)
+        public async Task<CloudinaryUploadResult?> UploadImageAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return null;
@@ -34,14 +34,28 @@ namespace Coffee.Services
             var uploadParams = new ImageUploadParams
             {
                 File = new FileDescription(file.FileName, stream),
-
-                // 📁 giống wwwroot/img/Products nhưng trên cloud
                 Folder = "img/Products"
             };
 
             var result = await _cloudinary.UploadAsync(uploadParams);
 
-            return result?.SecureUrl?.ToString();
+            return new CloudinaryUploadResult
+            {
+                Url = result.SecureUrl.ToString(),
+                PublicId = result.PublicId
+            };
+        }
+
+        // =========================
+        // ❌ DELETE IMAGE
+        // =========================
+        public async Task DeleteImageAsync(string publicId)
+        {
+            if (string.IsNullOrEmpty(publicId))
+                return;
+
+            var deleteParams = new DeletionParams(publicId);
+            await _cloudinary.DestroyAsync(deleteParams);
         }
     }
 }
