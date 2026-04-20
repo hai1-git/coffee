@@ -100,7 +100,7 @@ function updateTotal() {
         if (checkbox && checkbox.checked) {
 
             let subtotal = row.querySelector(".subtotal")
-                .innerText.replace(/,/g, "");
+                .innerText.replace(/[.,]/g, ""); // 🔥 FIX
 
             total += parseFloat(subtotal) || 0;
         }
