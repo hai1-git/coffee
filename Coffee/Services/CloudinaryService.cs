@@ -54,7 +54,11 @@ namespace Coffee.Services
             if (string.IsNullOrEmpty(publicId))
                 return;
 
-            var deleteParams = new DeletionParams(publicId);
+            var deleteParams = new DeletionParams(publicId)
+            {
+                Invalidate = true // 🔥 xoá cache CDN luôn
+            };
+
             await _cloudinary.DestroyAsync(deleteParams);
         }
     }
