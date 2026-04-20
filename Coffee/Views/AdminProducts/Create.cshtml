@@ -11,38 +11,43 @@
     <div class="col-md-5">
         <form asp-action="Create" enctype="multipart/form-data" class="card p-4 shadow">
 
+            <!-- HIỂN THỊ LỖI -->
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <!-- TÊN -->
             <div class="mb-3">
                 <label asp-for="ProductName" class="form-label"></label>
                 <input asp-for="ProductName" class="form-control" />
+                <span asp-validation-for="ProductName" class="text-danger"></span>
             </div>
 
             <!-- GIÁ -->
             <div class="mb-3">
                 <label asp-for="Price" class="form-label"></label>
-                <input asp-for="Price" class="form-control" />
+                <input asp-for="Price" class="form-control"
+                       type="number" min="0" step="0.01" />
+                <span asp-validation-for="Price" class="text-danger"></span>
             </div>
 
             <!-- MÔ TẢ -->
             <div class="mb-3">
                 <label asp-for="Description" class="form-label"></label>
                 <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <!-- 🔥 UPLOAD XỊN -->
+            <!-- UPLOAD ẢNH -->
             <div class="mb-3">
                 <label class="form-label">Ảnh sản phẩm</label>
 
                 <div id="dropArea" class="border rounded p-3 text-center" style="cursor:pointer;">
-                    <p class="text-muted m-0">Kéo thả ảnh vào đây hoặc click để chọn</p>
+                    <p class="text-muted m-0">Kéo thả ảnh hoặc click để chọn</p>
                     <input type="file" name="file" id="fileInput" hidden accept="image/*" />
                 </div>
 
                 <!-- PREVIEW -->
                 <div class="mt-3 text-center">
-                    <img id="preview" src=""
+                    <img id="preview"
                          style="max-width:150px; display:none; border-radius:10px;" />
                 </div>
             </div>
@@ -52,8 +57,10 @@
                 <label asp-for="CategoryId" class="form-label"></label>
                 <select asp-for="CategoryId" class="form-control"
                         asp-items="ViewBag.CategoryId"></select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
             </div>
 
+            <!-- BUTTON -->
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-success w-100">Tạo</button>
                 <a asp-action="Index" class="btn btn-secondary w-100">Quay lại</a>
@@ -64,20 +71,22 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
         const dropArea = document.getElementById("dropArea");
         const fileInput = document.getElementById("fileInput");
         const preview = document.getElementById("preview");
 
-        // 👉 click để chọn file
+        // click chọn file
         dropArea.addEventListener("click", () => fileInput.click());
 
-        // 👉 chọn file
+        // chọn file
         fileInput.addEventListener("change", function () {
             showPreview(this.files[0]);
         });
 
-        // 👉 drag & drop
+        // drag over
         dropArea.addEventListener("dragover", (e) => {
             e.preventDefault();
             dropArea.classList.add("bg-light");
@@ -87,6 +96,7 @@
             dropArea.classList.remove("bg-light");
         });
 
+        // drop
         dropArea.addEventListener("drop", (e) => {
             e.preventDefault();
             dropArea.classList.remove("bg-light");
@@ -97,13 +107,24 @@
             showPreview(file);
         });
 
-        // 👉 preview ảnh
+        // preview ảnh
         function showPreview(file) {
             if (!file) return;
+
+            if (!file.type.startsWith("image/")) {
+                alert("Chỉ được chọn file ảnh!");
+                return;
+            }
 
             const url = URL.createObjectURL(file);
             preview.src = url;
             preview.style.display = "block";
         }
+
+        // chặn nhập số âm realtime
+        const priceInput = document.querySelector("input[name='Price']");
+        priceInput.addEventListener("input", function () {
+            if (this.value < 0) this.value = 0;
+        });
     </script>
 }

@@ -10,33 +10,39 @@
 <div class="row">
     <div class="col-md-6">
 
-        <!-- 🔥 QUAN TRỌNG -->
-        <form asp-action="Edit" enctype="multipart/form-data">
+        <form asp-action="Edit" enctype="multipart/form-data" class="card p-4 shadow">
 
             <input type="hidden" asp-for="ProductId" />
 
-            <!-- Tên -->
+            <!-- HIỂN THỊ LỖI -->
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- TÊN -->
             <div class="mb-3">
                 <label asp-for="ProductName" class="form-label"></label>
                 <input asp-for="ProductName" class="form-control" />
                 <span asp-validation-for="ProductName" class="text-danger"></span>
             </div>
 
-            <!-- Giá -->
+            <!-- GIÁ -->
             <div class="mb-3">
                 <label asp-for="Price" class="form-label"></label>
-                <input asp-for="Price" class="form-control" />
+                <input asp-for="Price"
+                       class="form-control"
+                       type="number"
+                       min="0"
+                       step="0.01" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
 
-            <!-- Mô tả -->
+            <!-- MÔ TẢ -->
             <div class="mb-3">
                 <label asp-for="Description" class="form-label"></label>
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <!-- Ảnh hiện tại -->
+            <!-- ẢNH HIỆN TẠI -->
             <div class="mb-3 text-center">
                 <label class="form-label d-block">Ảnh hiện tại</label>
                 <img id="previewImage"
@@ -44,14 +50,14 @@
                      style="width:120px; height:120px; object-fit:cover; border-radius:10px; border:1px solid #ddd;" />
             </div>
 
-            <!-- Upload ảnh mới -->
+            <!-- UPLOAD ẢNH -->
             <div class="mb-3">
                 <label class="form-label">Chọn ảnh mới</label>
                 <input type="file" name="file" id="fileInput"
                        class="form-control" accept="image/*" />
             </div>
 
-            <!-- Category -->
+            <!-- DANH MỤC -->
             <div class="mb-3">
                 <label asp-for="CategoryId" class="form-label"></label>
                 <select asp-for="CategoryId"
@@ -60,13 +66,13 @@
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
             </div>
 
-            <!-- Button -->
+            <!-- BUTTON -->
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary w-100">
                     💾 Lưu
                 </button>
 
-                <a asp-action="Index" class="btn btn-secondary">
+                <a asp-action="Index" class="btn btn-secondary w-100">
                     ↩️ Quay lại
                 </a>
             </div>
@@ -76,14 +82,34 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
-        // 🔥 Preview ảnh khi chọn file
-        document.getElementById("fileInput").addEventListener("change", function (e) {
+        const fileInput = document.getElementById("fileInput");
+        const preview = document.getElementById("previewImage");
+
+        // preview ảnh
+        fileInput.addEventListener("change", function (e) {
             const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                document.getElementById("previewImage").src = url;
+
+            if (!file) return;
+
+            if (!file.type.startsWith("image/")) {
+                alert("Chỉ được chọn file ảnh!");
+                fileInput.value = "";
+                return;
             }
+
+            const url = URL.createObjectURL(file);
+            preview.src = url;
         });
+
+        // chặn nhập giá âm
+        const priceInput = document.querySelector("input[name='Price']");
+        if (priceInput) {
+            priceInput.addEventListener("input", function () {
+                if (this.value < 0) this.value = 0;
+            });
+        }
     </script>
 }

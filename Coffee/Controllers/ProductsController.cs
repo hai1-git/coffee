@@ -39,7 +39,7 @@ namespace Coffee.Controllers
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = p.Price.GetValueOrDefault(),
+                    Price = p.Price,
                     Description = p.Description,
                     ImageUrl = p.ImageUrl ?? string.Empty
                 })
@@ -79,7 +79,7 @@ namespace Coffee.Controllers
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = p.Price.GetValueOrDefault(),
+                    Price = p.Price,
                     Description = p.Description,
                     ImageUrl = p.ImageUrl ?? string.Empty
                 })
@@ -103,7 +103,7 @@ namespace Coffee.Controllers
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = p.Price.GetValueOrDefault(),
+                    Price = p.Price,
                     Description = p.Description,
                     ImageUrl = p.ImageUrl ?? string.Empty
                 })

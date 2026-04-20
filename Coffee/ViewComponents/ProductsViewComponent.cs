@@ -22,7 +22,7 @@ namespace Coffee.ViewComponents
                 {
                     Id = p.ProductId,
                     ProductName = p.ProductName,
-                    Price = (decimal)(p.Price ?? 0),
+                    Price = (decimal)(p.Price),
                     Description = p.Description,
                     ImageUrl = p.ImageUrl ?? string.Empty
                 }).ToList();

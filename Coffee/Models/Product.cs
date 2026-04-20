@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Coffee.Models;
 
@@ -9,7 +10,9 @@ public partial class Product
 
     public string? ProductName { get; set; }
 
-    public decimal? Price { get; set; }
+    [Required(ErrorMessage = "Vui lòng nhập giá")]
+    [Range(0, double.MaxValue, ErrorMessage = "Giá phải >= 0")]
+    public decimal Price { get; set; }
 
     public string? Description { get; set; }
 

@@ -87,7 +87,7 @@ namespace Coffee.Controllers
                     {
                         ProductId = p.ProductId,
                         ProductName = p.ProductName,
-                        Price = p.Price ?? 0,
+                        Price = p.Price,
                         Quantity = c.Quantity ?? 0
                     })
                 .ToList();
@@ -196,7 +196,7 @@ namespace Coffee.Controllers
                 .Join(db.Products,
                     c => c.ProductId,
                     p => p.ProductId,
-                    (c, p) => (p.Price ?? 0) * (c.Quantity ?? 0))
+                    (c, p) => (p.Price) * (c.Quantity ?? 0))
                 .Sum();
         }
 
@@ -207,7 +207,7 @@ namespace Coffee.Controllers
         {
             var price = db.Products
                 .Where(x => x.ProductId == productId)
-                .Select(x => x.Price ?? 0)
+                .Select(x => x.Price)
                 .FirstOrDefault();
 
             return new
