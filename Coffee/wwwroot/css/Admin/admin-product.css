@@ -1,0 +1,169 @@
+﻿/* =========================
+   HEADER ADMIN
+========================= */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.admin-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* BACK BUTTON */
+.btn-back {
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+    .btn-back:hover {
+        background: #000;
+        color: #fff;
+    }
+
+/* TITLE */
+.admin-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* RIGHT */
+.admin-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* =========================
+   SEARCH
+========================= */
+#searchInput {
+    width: 220px !important;
+    border-radius: 10px !important;
+    padding: 6px 12px;
+}
+
+/* =========================
+   ADD BUTTON
+========================= */
+.btn-add {
+    border-radius: 10px !important;
+    padding: 6px 14px !important;
+    font-weight: 500;
+}
+
+/* =========================
+   TABLE
+========================= */
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table thead th {
+        font-size: 14px;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    /* =========================
+   IMAGE
+========================= */
+    .table img {
+        border-radius: 8px;
+        transition: 0.3s;
+    }
+
+        .table img:hover {
+            transform: scale(1.2);
+        }
+
+    /* =========================
+   ACTION BUTTONS
+========================= */
+    .table .btn {
+        border-radius: 8px !important;
+        padding: 4px 8px !important;
+        transition: 0.2s;
+    }
+
+/* EDIT */
+.btn-warning {
+    background: #ffc107 !important;
+    border: none !important;
+}
+
+    .btn-warning:hover {
+        background: #e0a800 !important;
+    }
+
+/* VIEW */
+.btn-info {
+    background: #0dcaf0 !important;
+    border: none !important;
+}
+
+    .btn-info:hover {
+        background: #0aa2c0 !important;
+    }
+
+/* DELETE */
+.btn-danger {
+    background: #dc3545 !important;
+    border: none !important;
+}
+
+    .btn-danger:hover {
+        background: #bb2d3b !important;
+    }
+
+/* =========================
+   PAGINATION
+========================= */
+.pagination .page-link {
+    border-radius: 8px;
+    margin: 0 3px;
+}
+
+.pagination .page-item.active .page-link {
+    background: #000;
+    color: #fff;
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 576px) {
+
+    .admin-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .admin-right {
+        flex-direction: column;
+    }
+
+    #searchInput {
+        width: 100% !important;
+    }
+
+    table {
+        min-width: 700px;
+    }
+
+    .table {
+        display: block;
+        overflow-x: auto;
+    }
+}

@@ -1,79 +1,110 @@
 ﻿@model IEnumerable<Coffee.Models.Product>
+
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger">
         @TempData["Error"]
     </div>
 }
+
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
     Layout = "_ProductsCoffee";
 }
 
-<h2 class="mb-4">📦 Quản lý sản phẩm</h2>
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/admin-product.css" />
+}
 
-<div class="d-flex justify-content-between mb-3">
-    <a asp-action="Create" class="btn btn-success">
-        ➕ Thêm sản phẩm
-    </a>
+<div class="container py-4">
 
-    <!-- 🔍 SEARCH -->
-    <input type="text" id="searchInput"
-           class="form-control w-25"
-           placeholder="🔍 Tìm sản phẩm..." />
-</div>
+    <!-- HEADER -->
+    <div class="admin-header">
 
-<table class="table table-hover table-bordered align-middle">
-    <thead class="table-dark text-center">
-        <tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Giá</th>
-            <th>Mô tả</th>
-            <th>Ảnh</th>
-            <th>Danh mục</th>
-            <th width="180">Hành động</th>
-        </tr>
-    </thead>
+        <div class="admin-left">
+            <a asp-controller="Admin" asp-action="Index"
+               class="btn btn-outline-dark btn-back">
+                ← Dashboard
+            </a>
 
-    <tbody id="productTable">
-        @foreach (var item in Model)
-        {
+            <h2 class="admin-title">📦 Quản lý sản phẩm</h2>
+        </div>
+
+        <div class="admin-right">
+            <input type="text" id="searchInput"
+                   class="form-control"
+                   placeholder="🔍 Tìm sản phẩm..." />
+
+            <a asp-action="Create"
+               class="btn btn-success btn-add">
+                ➕ Thêm
+            </a>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <table class="table table-hover table-bordered align-middle">
+
+        <thead class="table-dark text-center">
             <tr>
-                <td class="text-center fw-bold">@item.ProductId</td>
-                <td class="name">@item.ProductName</td>
-                <td class="text-danger fw-bold">
-                    @item.Price?.ToString("N0") đ
-                </td>
-                <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    @item.Description
-                </td>
-                <td class="text-center">
-                    <img src="@item.ImageUrl"
-                         style="width:60px; height:60px; object-fit:cover; border-radius:8px;" />
-                </td>
-                <td class="text-center">
-                    @item.Category?.CategoryName
-                </td>
-                <td class="text-center">
-                    <a asp-action="Edit" asp-route-id="@item.ProductId"
-                       class="btn btn-warning btn-sm">✏️</a>
-
-                    <a asp-action="Details" asp-route-id="@item.ProductId"
-                       class="btn btn-info btn-sm text-white">🔍</a>
-
-                    <a asp-action="Delete" asp-route-id="@item.ProductId"
-                       class="btn btn-danger btn-sm"
-                       onclick="return confirm('Xoá sản phẩm này?')">❌</a>
-                </td>
+                <th>ID</th>
+                <th>Tên</th>
+                <th>Giá</th>
+                <th>Mô tả</th>
+                <th>Ảnh</th>
+                <th>Danh mục</th>
+                <th width="180">Hành động</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
 
-<!-- 🔥 PAGINATION -->
-<div class="d-flex justify-content-center mt-3">
-    <ul class="pagination" id="pagination"></ul>
+        <tbody id="productTable">
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-center fw-bold">@item.ProductId</td>
+
+                    <td class="name">@item.ProductName</td>
+
+                    <td class="text-danger fw-bold">
+                        @item.Price?.ToString("N0") đ
+                    </td>
+
+                    <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        @item.Description
+                    </td>
+
+                    <td class="text-center">
+                        <img src="@item.ImageUrl"
+                             style="width:60px; height:60px; object-fit:cover; border-radius:8px;" />
+                    </td>
+
+                    <td class="text-center">
+                        @item.Category?.CategoryName
+                    </td>
+
+                    <td class="text-center">
+                        <a asp-action="Edit" asp-route-id="@item.ProductId"
+                           class="btn btn-warning btn-sm">✏️</a>
+
+                        <a asp-action="Details" asp-route-id="@item.ProductId"
+                           class="btn btn-info btn-sm text-white">🔍</a>
+
+                        <a asp-action="Delete" asp-route-id="@item.ProductId"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Xoá sản phẩm này?')">❌</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+        <ul class="pagination" id="pagination"></ul>
+    </div>
+
 </div>
 
 @section Scripts {
@@ -84,7 +115,7 @@
 
         let currentPage = 1;
         const pageSize = 5;
-        const maxPagesToShow = 3; // 🔥 chỉ hiện 3 nút
+        const maxPagesToShow = 3;
 
         function getFilteredRows() {
             return Array.from(rows).filter(row => {
@@ -117,7 +148,6 @@
 
             if (totalPages <= 1) return;
 
-            // 🔥 PREV
             const prev = document.createElement("li");
             prev.className = "page-item " + (currentPage === 1 ? "disabled" : "");
             prev.innerHTML = `<a class="page-link" href="#">«</a>`;
@@ -127,7 +157,6 @@
             };
             pagination.appendChild(prev);
 
-            // 🔥 tính range hiển thị
             let startPage = Math.max(1, currentPage - 1);
             let endPage = startPage + maxPagesToShow - 1;
 
@@ -136,7 +165,6 @@
                 startPage = Math.max(1, endPage - maxPagesToShow + 1);
             }
 
-            // 🔥 render số trang (max 3)
             for (let i = startPage; i <= endPage; i++) {
                 const li = document.createElement("li");
                 li.className = "page-item " + (i === currentPage ? "active" : "");
@@ -151,7 +179,6 @@
                 pagination.appendChild(li);
             }
 
-            // 🔥 NEXT
             const next = document.createElement("li");
             next.className = "page-item " + (currentPage === totalPages ? "disabled" : "");
             next.innerHTML = `<a class="page-link" href="#">»</a>`;
@@ -162,12 +189,10 @@
             pagination.appendChild(next);
         }
 
-        // 🔍 search realtime
         searchInput.addEventListener("input", () => {
             showPage(1);
         });
 
-        // init
         showPage(1);
     </script>
 }

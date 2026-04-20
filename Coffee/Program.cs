@@ -19,6 +19,8 @@ internal class Program
         var myConnectionString = builder.Configuration.GetConnectionString("MyConnectString");
         builder.Services.AddDbContext<CoffeeShopDbContext>(options =>
             options.UseNpgsql(myConnectionString));
+        //options.UseSqlServer(myConnectionString));
+
 
         // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
         builder.Services.AddSingleton<CloudinaryService>();
@@ -38,22 +40,22 @@ internal class Program
         // =========================
         // 🔥 SEED DATA (THÊM Ở ĐÂY)
         // =========================
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+        //using (var scope = app.Services.CreateScope())
+        //{
+        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
 
-            db.Database.Migrate(); // đảm bảo tạo DB trước
+        //    db.Database.Migrate(); // đảm bảo tạo DB trước
 
-            if (!db.Roles.Any())
-            {
-                db.Roles.AddRange(
-                    new Role { RoleName = "Admin" },
-                    new Role { RoleName = "User" }
-                );
+        //    if (!db.Roles.Any())
+        //    {
+        //        db.Roles.AddRange(
+        //            new Role { RoleName = "Admin" },
+        //            new Role { RoleName = "User" }
+        //        );
 
-                db.SaveChanges();
-            }
-        }
+        //        db.SaveChanges();
+        //    }
+        //}
 
         // =========================
         // ⚙️ PIPELINE
@@ -83,11 +85,11 @@ internal class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
         // 👉 AUTO MIGRATE
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-            db.Database.Migrate();
-        }
+        //using (var scope = app.Services.CreateScope())
+        //{
+        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+        //    db.Database.Migrate();
+        //}
 
         app.Run();
     }
