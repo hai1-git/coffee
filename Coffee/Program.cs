@@ -31,8 +31,8 @@ internal class Program
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
-                options.LoginPath = "/Auth/Login";
-                options.AccessDeniedPath = "/Auth/Login";
+                options.LoginPath = "/Home/NotFound";
+                options.AccessDeniedPath = "/Home/NotFound";
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(10); // ⏱ 10 phút
                 //options.SlidingExpiration = false; // ❌ không tự gia hạn
                 options.SlidingExpiration = true;  //Nếu muốn user không bị out khi đang dùng

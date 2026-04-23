@@ -33,6 +33,10 @@ namespace Coffee.Controllers
 
         public IActionResult Testimonial() => View();
 
+        public IActionResult NotFound()
+        {
+            return View();
+        }
 
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

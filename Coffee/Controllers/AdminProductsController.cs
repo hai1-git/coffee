@@ -1,15 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Coffee.Data;
+using Coffee.Models;
+using Coffee.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Coffee.Data;
-using Coffee.Models;
-using Coffee.Services;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Coffee.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminProductsController : Controller
     {
         private readonly CoffeeShopDbContext _context;
