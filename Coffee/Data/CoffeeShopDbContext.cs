@@ -32,6 +32,7 @@ public partial class CoffeeShopDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+ 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,8 +64,8 @@ public partial class CoffeeShopDbContext : DbContext
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCFD629F690");
 
             entity.Property(e => e.OrderDate)
-        .HasColumnType("timestamp with time zone")
-        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(10, 2)");
 
@@ -105,11 +106,9 @@ public partial class CoffeeShopDbContext : DbContext
         {
             entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CD96392F1C");
 
+            entity.Property(e => e.ImagePublicId).HasMaxLength(200);
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
-            // 👉 THÊM DÒNG NÀY
-            entity.Property(e => e.ImagePublicId)
-                .HasMaxLength(200);
-            entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ProductName).HasMaxLength(200);
 
             entity.HasOne(d => d.Category).WithMany(p => p.Products)
@@ -128,21 +127,19 @@ public partial class CoffeeShopDbContext : DbContext
         {
             entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C30C383DF");
 
-            entity.HasIndex(e => e.Email, "UQ__Users__A9D1053416F5B065").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ_Users_Email").IsUnique();
 
             entity.Property(e => e.Address).HasMaxLength(200);
-            // 🔥 FIX QUAN TRỌNG Ở ĐÂY
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp with time zone")
-                .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
+                 .HasColumnType("timestamp with time zone")
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Email).HasMaxLength(100);
-            entity.Property(e => e.UserName).HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
             entity.Property(e => e.LockReason).HasMaxLength(200);
-            entity.Property(e => e.Password).HasMaxLength(200);
+            entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.Phone).HasMaxLength(20);
+            entity.Property(e => e.UserName).HasMaxLength(15);
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)

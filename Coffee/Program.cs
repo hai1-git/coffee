@@ -33,6 +33,9 @@ internal class Program
             {
                 options.LoginPath = "/Auth/Login";
                 options.AccessDeniedPath = "/Auth/Login";
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(10); // ⏱ 10 phút
+                //options.SlidingExpiration = false; // ❌ không tự gia hạn
+                options.SlidingExpiration = true;  //Nếu muốn user không bị out khi đang dùng
             });
 
         var app = builder.Build();

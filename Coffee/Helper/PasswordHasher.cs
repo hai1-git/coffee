@@ -1,18 +1,21 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using Microsoft.AspNetCore.Identity;
+using Coffee.Models;
 
 namespace Coffee.Helper
 {
-    public class PasswordHasher
+    public class PasswordHasherHelper
     {
-        public string Hash(string password)
+        private readonly PasswordHasher<User> _hasher = new();
+
+        public string Hash(User user, string password)
         {
-            using (SHA256 sha = SHA256.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(password);
-                var hash = sha.ComputeHash(bytes);
-                return Convert.ToBase64String(hash);
-            }
+            return _hasher.HashPassword(user, password);
+        }
+
+        public bool Verify(User user, string hashedPassword, string inputPassword)
+        {
+            var result = _hasher.VerifyHashedPassword(user, hashedPassword, inputPassword);
+            return result == PasswordVerificationResult.Success;
         }
     }
 }

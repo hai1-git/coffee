@@ -1,11 +1,12 @@
-﻿using Coffee.DTO;
-using Coffee.Models;
+﻿using Coffee.Data;
+using Coffee.DTO;
 using Coffee.Helper;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Coffee.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Coffee.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 
 namespace Coffee.Controllers
@@ -13,7 +14,7 @@ namespace Coffee.Controllers
     public class AuthController : Controller
     {
         private readonly CoffeeShopDbContext db;
-        private readonly PasswordHasher hasher = new PasswordHasher();
+        private readonly PasswordHasherHelper hasher = new PasswordHasherHelper();
 
         public AuthController(CoffeeShopDbContext context)
         {
@@ -52,15 +53,14 @@ namespace Coffee.Controllers
                 {
                     UserName = dto.Username,
                     Email = dto.Email,
-
-                    // ⚠️ FIX: hash 1 lần duy nhất
-                    Password = hasher.Hash(dto.Password),
-
                     RoleId = 2,
                     IsActive = true,
                     IsLocked = false,
                     CreatedAt = DateTime.UtcNow
                 };
+                
+                // hash password
+                user.Password = hasher.Hash(user, dto.Password);
 
                 db.Users.Add(user);
                 db.SaveChanges();
@@ -86,13 +86,9 @@ namespace Coffee.Controllers
             if (!ModelState.IsValid)
                 return View(dto);
 
-            var hash = hasher.Hash(dto.Password);
+            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.UserName == dto.Username);
 
-            var user = db.Users.FirstOrDefault(x =>
-                x.UserName == dto.Username &&
-                x.Password == hash);
-
-            if (user == null)
+            if (user == null || user.Password == null || !hasher.Verify(user, user.Password, dto.Password))
             {
                 ModelState.AddModelError("", "Sai tài khoản hoặc mật khẩu!");
                 return View(dto);
@@ -129,7 +125,12 @@ namespace Coffee.Controllers
             // =========================
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                principal
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(10) // ⏱ 10 phút
+                }
             );
 
             return RedirectToAction("Index", "Products");
