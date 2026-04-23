@@ -33,7 +33,6 @@ public partial class CoffeeShopDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
  
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Cart>(entity =>
@@ -129,10 +128,12 @@ public partial class CoffeeShopDbContext : DbContext
 
             entity.HasIndex(e => e.Email, "UQ_Users_Email").IsUnique();
 
+            entity.HasIndex(e => e.UserName, "UQ_Users_UserName").IsUnique();
+
             entity.Property(e => e.Address).HasMaxLength(200);
             entity.Property(e => e.CreatedAt)
-                 .HasColumnType("timestamp with time zone")
-                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);

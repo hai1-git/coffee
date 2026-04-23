@@ -86,7 +86,7 @@ namespace Coffee.Controllers
             if (!ModelState.IsValid)
                 return View(dto);
 
-            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.UserName == dto.Username);
+            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.UserName == dto.Username || x.Email == dto.Username);
 
             if (user == null || user.Password == null || !hasher.Verify(user, user.Password, dto.Password))
             {
