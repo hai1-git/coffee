@@ -87,6 +87,9 @@ internal class Program
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
+
+        // những đường link nào của trang k tồn tại sẽ bay zo đây
+        app.MapFallbackToController("NotFound", "Home");
         // 👉 AUTO MIGRATE
         //using (var scope = app.Services.CreateScope())
         //{

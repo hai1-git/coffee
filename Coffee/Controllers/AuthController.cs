@@ -136,6 +136,60 @@ namespace Coffee.Controllers
             return RedirectToAction("Index", "Products");
         }
 
+        // đổi mật khẩu (chỉ user đã login mới vào được)
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult ChangePassword(ChangePasswordDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            try
+            {
+                // 🔥 lấy user hiện tại từ cookie
+                var userId = User.FindFirst("UserId")?.Value;
+
+                if (userId == null)
+                    return RedirectToAction("Login");
+
+                var user = db.Users.FirstOrDefault(x => x.UserId.ToString() == userId);
+
+                if (user == null)
+                    return RedirectToAction("Login");
+
+                // 🔥 kiểm tra mật khẩu cũ
+                if (!hasher.Verify(user, user.Password, dto.OldPassword))
+                {
+                    ModelState.AddModelError("OldPassword", "Mật khẩu cũ không đúng!");
+                    return View(dto);
+                }
+
+                // 🔥 2. Check mật khẩu mới KHÔNG trùng
+                if (hasher.Verify(user, user.Password, dto.NewPassword))
+                {
+                    ModelState.AddModelError("NewPassword", "Mật khẩu mới không được trùng mật khẩu cũ!");
+                    return View(dto);
+                }
+
+                // 🔥 hash mật khẩu mới
+                user.Password = hasher.Hash(user, dto.NewPassword);
+
+                db.SaveChanges();
+
+                ViewBag.Success = "Đổi mật khẩu thành công!";
+                return View();
+            }
+            catch (Exception ex)
+            {
+                return Content($"ERROR CHANGE PASSWORD: {ex.InnerException?.Message ?? ex.Message}");
+            }
+        }
+
         // =========================
         // 🚪 LOGOUT
         // =========================
