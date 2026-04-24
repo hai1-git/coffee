@@ -4,6 +4,7 @@ using Coffee.Helper;
 using Coffee.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -24,6 +25,7 @@ namespace Coffee.Controllers
         // =========================
         // 📝 REGISTER
         // =========================
+
         [HttpGet]
         public IActionResult Register() => View();
 
@@ -137,12 +139,13 @@ namespace Coffee.Controllers
         }
 
         // đổi mật khẩu (chỉ user đã login mới vào được)
+        [Authorize]
         [HttpGet]
         public IActionResult ChangePassword()
         {
             return View();
         }
-
+        [Authorize]
         [HttpPost]
         public IActionResult ChangePassword(ChangePasswordDTO dto)
         {
