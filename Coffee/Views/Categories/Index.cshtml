@@ -10,7 +10,15 @@
     Layout = "_ProductsCoffee";
 }
 
-<h1>Index</h1>
+
+<div class="admin-left">
+    <a asp-controller="Admin" asp-action="Index"
+       class="btn btn-outline-dark btn-back">
+        ← Dashboard
+    </a>
+
+    <h2 class="admin-title">📦 Quản lý loại sản phẩm</h2>
+</div>
 
 <p>
     <a asp-action="Create">Create New</a>
