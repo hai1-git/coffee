@@ -9,6 +9,12 @@ public partial class Order
 
     public int? UserId { get; set; }
 
+    public string? ReceiverName { get; set; }
+
+    public string? ReceiverPhone { get; set; }
+
+    public string? ShippingAddress { get; set; }
+
     public decimal? TotalAmount { get; set; }
 
     public string? Status { get; set; }

@@ -193,6 +193,66 @@ namespace Coffee.Controllers
             }
         }
 
+        [Authorize]
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            var userId = User.FindFirst("UserId")?.Value;
+
+            if (userId == null)
+                return RedirectToAction("Login");
+
+            var user = db.Users.FirstOrDefault(x => x.UserId.ToString() == userId);
+
+            if (user == null)
+                return RedirectToAction("Login");
+
+            return View(new UpdateProfileDTO
+            {
+                Username = user.UserName,
+                Email = user.Email,
+                Phone = user.Phone ?? string.Empty,
+                Address = user.Address ?? string.Empty
+            });
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult Profile(UpdateProfileDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            try
+            {
+                var userId = User.FindFirst("UserId")?.Value;
+
+                if (userId == null)
+                    return RedirectToAction("Login");
+
+                var user = db.Users.FirstOrDefault(x => x.UserId.ToString() == userId);
+
+                if (user == null)
+                    return RedirectToAction("Login");
+
+                user.Phone = dto.Phone.Trim();
+                user.Address = dto.Address.Trim();
+
+                db.SaveChanges();
+
+                ViewBag.Success = "Cap nhat thong tin nhan hang thanh cong!";
+
+                dto.Username = user.UserName;
+                dto.Email = user.Email;
+
+                return View(dto);
+            }
+            catch (Exception ex)
+            {
+                return Content($"ERROR UPDATE PROFILE: {ex.InnerException?.Message ?? ex.Message}");
+            }
+        }
+
         // =========================
         // 🚪 LOGOUT
         // =========================

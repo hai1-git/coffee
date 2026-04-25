@@ -31,14 +31,31 @@ internal class Program
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
-                options.LoginPath = "/Home/NotFound";
-                options.AccessDeniedPath = "/Home/NotFound";
+                options.LoginPath = "/Auth/Login";
+                options.AccessDeniedPath = "/Auth/Login";
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(10); // ⏱ 10 phút
                 //options.SlidingExpiration = false; // ❌ không tự gia hạn
                 options.SlidingExpiration = true;  //Nếu muốn user không bị out khi đang dùng
             });
 
         var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+
+            if (db.Database.IsSqlServer())
+            {
+                db.Database.ExecuteSqlRaw(@"
+IF COL_LENGTH('Orders', 'ReceiverName') IS NULL
+    ALTER TABLE Orders ADD ReceiverName NVARCHAR(100) NULL;
+IF COL_LENGTH('Orders', 'ReceiverPhone') IS NULL
+    ALTER TABLE Orders ADD ReceiverPhone NVARCHAR(20) NULL;
+IF COL_LENGTH('Orders', 'ShippingAddress') IS NULL
+    ALTER TABLE Orders ADD ShippingAddress NVARCHAR(300) NULL;
+");
+            }
+        }
 
         // =========================
         // 🔥 SEED DATA (THÊM Ở ĐÂY)

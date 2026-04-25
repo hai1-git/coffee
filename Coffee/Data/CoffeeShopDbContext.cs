@@ -65,6 +65,9 @@ public partial class CoffeeShopDbContext : DbContext
             entity.Property(e => e.OrderDate)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.ReceiverName).HasMaxLength(100);
+            entity.Property(e => e.ReceiverPhone).HasMaxLength(20);
+            entity.Property(e => e.ShippingAddress).HasMaxLength(300);
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(10, 2)");
 

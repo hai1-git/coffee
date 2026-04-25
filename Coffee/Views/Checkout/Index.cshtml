@@ -1,0 +1,97 @@
+@model Coffee.ViewModel.CheckoutViewModel
+@{
+    Layout = "_ProductsCoffee";
+}
+
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">San pham da chon</h4>
+                <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-dark btn-sm">Quay lai gio hang</a>
+            </div>
+
+            <div class="border rounded p-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Thong tin nhan hang</h5>
+                    <a asp-controller="Auth" asp-action="Profile" class="btn btn-outline-secondary btn-sm">
+                        Cap nhat ho so
+                    </a>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="ReceiverName" class="form-label">Ten nguoi nhan</label>
+                        <input asp-for="ReceiverName" class="form-control" placeholder="Nhap ten nguoi nhan" form="checkout-form" />
+                        <span asp-validation-for="ReceiverName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ReceiverPhone" class="form-label">So dien thoai</label>
+                        <input asp-for="ReceiverPhone" class="form-control" placeholder="Nhap so dien thoai shipper lien he" form="checkout-form" />
+                        <span asp-validation-for="ReceiverPhone" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="ShippingAddress" class="form-label">Dia chi giao hang</label>
+                        <textarea asp-for="ShippingAddress"
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="So nha, ten duong, phuong/xa, quan/huyen, tinh/thanh pho"
+                                  form="checkout-form"></textarea>
+                        <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                        <div class="small text-muted mt-2">
+                            Dien dia chi cang chi tiet thi shipper giao hang cang chuan, giong cach dat tren TikTok Shop.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @foreach (var item in Model.Items)
+            {
+                <div class="d-flex justify-content-between align-items-center border rounded px-3 py-3 mb-3 bg-white">
+                    <div>
+                        <div class="fw-bold">@item.ProductName</div>
+                        <small class="text-muted">Don gia: @item.Price.ToString("N0")</small>
+                    </div>
+                    <div>x @item.Quantity</div>
+                    <div class="text-danger fw-bold">@item.SubTotal.ToString("N0")</div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="border rounded p-4 bg-white">
+                <h4 class="mb-3">Thanh toan COD</h4>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="border rounded p-3 mb-3 bg-light">
+                    <div class="fw-bold text-dark mb-2">Thanh toan khi nhan hang</div>
+                    <div class="small text-muted">
+                        Shop se ship den dia chi ban vua nhap. Khi nhan duoc hang, ban moi thanh toan cho shipper.
+                    </div>
+                </div>
+
+                <form id="checkout-form" asp-action="Index" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="SelectedItemsJson" type="hidden" />
+                    <input asp-for="PaymentMethod" type="hidden" value="COD" />
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tong tien</span>
+                        <strong class="text-danger">@Model.Total.ToString("N0")</strong>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100 mt-3">
+                        Dat hang COD
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

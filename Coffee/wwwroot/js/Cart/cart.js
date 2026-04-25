@@ -262,3 +262,24 @@ document.addEventListener("blur", function (e) {
         });
 
 }, true);
+
+// =========================
+// 🛒 CHECKOUT FORM
+// =========================
+function hasSelectedCheckoutItems() {
+    return document.querySelectorAll(".item-check:checked").length > 0;
+}
+
+window.addEventListener("DOMContentLoaded", function () {
+
+    let form = document.getElementById("cart-checkout-form");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function (e) {
+        if (!hasSelectedCheckoutItems()) {
+            e.preventDefault();
+            alert("Vui lòng chọn sản phẩm!");
+        }
+    });
+});

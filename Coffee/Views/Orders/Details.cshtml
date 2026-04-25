@@ -1,0 +1,59 @@
+@model Coffee.ViewModel.OrderDetailViewModel
+@{
+    Layout = "_ProductsCoffee";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-1">Chi tiet don #@Model.OrderId</h3>
+            <div class="text-muted">Theo doi trang thai giao hang va thanh toan COD.</div>
+        </div>
+
+        <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-dark btn-sm">
+            Quay lai lich su don
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="border rounded p-4 bg-white">
+                <h5 class="mb-3">Thong tin don hang</h5>
+                <div class="mb-2">Nguoi nhan: <span class="fw-bold">@Model.ReceiverName</span></div>
+                <div class="mb-2">So dien thoai: <span class="fw-bold">@Model.ReceiverPhone</span></div>
+                <div class="mb-2">Dia chi: <span class="fw-bold">@Model.ShippingAddress</span></div>
+                <div class="mb-2">Ngay dat: <span class="fw-bold">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span></div>
+                <div class="mb-2">Trang thai: <span class="fw-bold">@Model.Status</span></div>
+                <div class="mb-2">Phuong thuc: <span class="fw-bold">@Model.PaymentMethod</span></div>
+                <div class="mb-2">Thanh toan: <span class="fw-bold">@Model.PaymentStatus</span></div>
+                <div class="mb-2">Ma giao dich: <span class="fw-bold">@Model.TransactionId</span></div>
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <span>Tong tien</span>
+                    <strong class="text-danger">@Model.TotalAmount.ToString("N0")</strong>
+                </div>
+                <div class="small text-muted mt-3">
+                    Don hang COD se duoc giao den nha truoc, ban thanh toan cho shipper khi nhan hang.
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="border rounded p-4 bg-white">
+                <h5 class="mb-3">San pham trong don</h5>
+
+                @foreach (var item in Model.Items)
+                {
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                        <div>
+                            <div class="fw-bold">@item.ProductName</div>
+                            <div class="text-muted small">Don gia: @item.Price.ToString("N0")</div>
+                        </div>
+                        <div>x @item.Quantity</div>
+                        <div class="text-danger fw-bold">@item.SubTotal.ToString("N0")</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

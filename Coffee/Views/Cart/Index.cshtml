@@ -6,6 +6,19 @@
     <link rel="stylesheet" href="~/css/Cart/Cart.css" />
 }
 <div class="container py-4">
+    @if (TempData["CheckoutSuccess"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["CheckoutSuccess"]
+        </div>
+    }
+
+    @if (TempData["CheckoutError"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["CheckoutError"]
+        </div>
+    }
 
     <!-- BACK + SEARCH -->
     <div class="d-flex justify-content-between mb-3">
@@ -21,89 +34,96 @@
                placeholder="Tìm sản phẩm...">
     </div>
 
-    <!-- TABLE -->
-    <div style="max-height:400px; overflow-y:auto;" class="border rounded">
+    <form id="cart-checkout-form" asp-controller="Checkout" asp-action="StartCheckout" method="get">
+        <!-- TABLE -->
+        <div style="max-height:400px; overflow-y:auto;" class="border rounded">
 
-        <table class="table text-center align-middle mb-0">
+            <table class="table text-center align-middle mb-0">
 
-            <thead class="table-light sticky-top">
-                <tr>
-                    <th>
-                        <input type="checkbox" id="check-all" checked>
-                    </th>
-                    <th class="text-start">Sản phẩm</th>
-                    <th>Giá</th>
-                    <th>Số lượng</th>
-                    <th>Tạm tính</th>
-                    <th></th>
-                </tr>
-            </thead>
-
-            <tbody id="cart-body">
-                @foreach (var item in Model.Items)
-                {
-                    <tr data-id="@item.ProductId">
-
-                        <td>
-                            <input type="checkbox" class="item-check" checked>
-                        </td>
-
-                        <td class="text-start product-name">
-                            @item.ProductName
-                        </td>
-
-                        <td>@item.Price.ToString("N0")</td>
-
-                        <td>
-                            <div class="input-group" style="max-width:140px; margin:auto;">
-                                <button class="btn btn-outline-secondary btn-sm btn-minus">-</button>
-
-                                <input type="text"
-                                       class="form-control text-center quantity-input"
-                                       value="@item.Quantity">
-
-                                <button class="btn btn-outline-secondary btn-sm btn-plus">+</button>
-                            </div>
-                        </td>
-
-                        <td class="subtotal text-danger fw-bold">
-                            @item.SubTotal.ToString("N0")
-                        </td>
-
-                        <td>
-                            <button class="btn btn-danger btn-sm btn-delete">
-                                Xóa
-                            </button>
-                        </td>
-
+                <thead class="table-light sticky-top">
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="check-all" checked>
+                        </th>
+                        <th class="text-start">Sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Tạm tính</th>
+                        <th></th>
                     </tr>
-                }
-            </tbody>
+                </thead>
 
-        </table>
-    </div>
+                <tbody id="cart-body">
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr data-id="@item.ProductId">
 
-    <!-- FOOTER -->
-    <div class="d-flex justify-content-between align-items-center mt-4">
+                            <td>
+                                <input type="checkbox"
+                                       class="item-check"
+                                       name="selectedProductIds"
+                                       value="@item.ProductId"
+                                       checked>
+                            </td>
 
-        <button id="uncheck-all" class="btn btn-outline-secondary btn-sm">
-            Bỏ chọn tất cả
-        </button>
+                            <td class="text-start product-name">
+                                @item.ProductName
+                            </td>
 
-        <h4>
-            Tổng tiền:
-            <span id="cart-total" class="text-danger">
-                @Model.Total.ToString("N0")
-            </span>
-        </h4>
+                            <td>@item.Price.ToString("N0")</td>
 
-        <button class="btn btn-success fw-bold">
-            Thanh toán
-        </button>
-    </div>
+                            <td>
+                                <div class="input-group" style="max-width:140px; margin:auto;">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-minus">-</button>
+
+                                    <input type="text"
+                                           class="form-control text-center quantity-input"
+                                           name="quantities[@item.ProductId]"
+                                           value="@item.Quantity">
+
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-plus">+</button>
+                                </div>
+                            </td>
+
+                            <td class="subtotal text-danger fw-bold">
+                                @item.SubTotal.ToString("N0")
+                            </td>
+
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete">
+                                    Xóa
+                                </button>
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+
+            <button type="button" id="uncheck-all" class="btn btn-outline-secondary btn-sm">
+                Bỏ chọn tất cả
+            </button>
+
+            <h4>
+                Tổng tiền:
+                <span id="cart-total" class="text-danger">
+                    @Model.Total.ToString("N0")
+                </span>
+            </h4>
+
+            <button type="submit" id="btn-checkout" class="btn btn-success fw-bold">
+                Thanh toán
+            </button>
+        </div>
+    </form>
 
 </div>
 
 @section Scripts {
-    <script src="~/js/Cart/cart.js"></script>
+    <script src="~/js/Cart/cart.js" asp-append-version="true"></script>
 }

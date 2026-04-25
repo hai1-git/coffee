@@ -9,5 +9,8 @@
 
         // số loại sản phẩm trong giỏ
         public int TotalItems => Items?.Count ?? 0;
+
+        // 🔥 tổng số lượng (giống TikTok/Shopee)
+        public int TotalQuantity => Items?.Sum(x => x.Quantity) ?? 0;
     }
 }

@@ -40,6 +40,8 @@
 
                 <input type="text"
                        class="form-control text-center quantity-input"
+                       name="quantity"
+                       form="buy-now-detail-@Model.Id"
                        value="1">
 
                 <button class="btn btn-outline-secondary btn-plus">+</button>
@@ -53,9 +55,16 @@
                     🛒 Thêm vào giỏ
                 </button>
 
-                <button class="btn btn-warning btn-lg fw-bold">
-                    ⚡ Thanh toán ngay
-                </button>
+                <form id="buy-now-detail-@Model.Id"
+                      asp-controller="Checkout"
+                      asp-action="BuyNow"
+                      method="get"
+                      class="m-0">
+                    <input type="hidden" name="productId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-warning btn-lg fw-bold w-100">
+                        ⚡ Thanh toán ngay
+                    </button>
+                </form>
 
                 <a asp-controller="Products"
                    asp-action="Index"
@@ -72,6 +81,6 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/Products/count.js"></script>
-    <script src="~/js/Products/Products.js"></script>
+    <script src="~/js/Products/count.js" asp-append-version="true"></script>
+    <script src="~/js/Products/Products.js" asp-append-version="true"></script>
 }
