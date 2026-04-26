@@ -27,6 +27,8 @@ internal class Program
             options.UseNpgsql(myConnectionString));
         //options.UseSqlServer(myConnectionString));
 
+        builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+        builder.Services.AddTransient<EmailService>();
 
         // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
         builder.Services.AddSingleton<CloudinaryService>();
@@ -53,11 +55,13 @@ internal class Program
 
         var app = builder.Build();
 
-        //using (var scope = app.Services.CreateScope())
-        //{
-        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-        //    db.Database.Migrate();
-        //}
+        PasswordResetSchemaInitializer.EnsureAsync(app.Services).GetAwaiter().GetResult();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+            db.Database.Migrate();
+        }
 
         // =========================
         // 🔥 SEED DATA (THÊM Ở ĐÂY)
@@ -110,13 +114,6 @@ internal class Program
 
         // những đường link nào của trang k tồn tại sẽ bay zo đây
         app.MapFallbackToController("NotFound", "Home");
-        // 👉 AUTO MIGRATE
-        //using (var scope = app.Services.CreateScope())
-        //{
-        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-        //    db.Database.Migrate();
-        //}
-
         app.Run();
     }
 }

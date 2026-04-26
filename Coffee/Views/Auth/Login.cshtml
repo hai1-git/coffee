@@ -3,6 +3,11 @@
 <div class="container py-5" style="max-width:500px;">
     <h3 class="text-center mb-4">Đăng nhập</h3>
 
+    @if (TempData["AuthSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["AuthSuccess"]</div>
+    }
+
     <form method="post">
 
         <input asp-for="Username" class="form-control mb-1" placeholder="Username" />
@@ -17,7 +22,8 @@
 
     </form>
 
-    <div class="text-center mt-3">
+    <div class="text-center mt-3 d-flex flex-column gap-2">
+        <a href="/Auth/ForgotPassword">Quen mat khau?</a>
         <a href="/Auth/Register">Chưa có tài khoản?</a>
     </div>
 </div>

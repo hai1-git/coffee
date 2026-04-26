@@ -33,50 +33,63 @@
     }
     else
     {
-        <div class="orders-list">
-            @foreach (var order in Model.Orders)
-            {
-                <article class="order-history-card">
-                    <div class="order-history-top">
-                        <div class="order-history-title">
-                            <span class="order-chip">Don #@order.OrderId</span>
-                            <span class="order-chip order-chip-soft">@order.TotalItems san pham</span>
-                        </div>
+        <section class="orders-list-panel">
+            <div class="orders-list-panel-header">
+                <div>
+                    <h5 class="mb-1">Danh sach don cua ban</h5>
+                    <p class="text-muted mb-0">Khi don hang nhieu hon, ban cuon ben trong khung nay de phan tieu de va nut thao tac van nam gon o tren.</p>
+                </div>
 
-                        <div class="order-history-total">@order.TotalAmount.ToString("N0") đ</div>
-                    </div>
+                <span class="order-chip order-chip-soft">@Model.Orders.Count don hang</span>
+            </div>
 
-                    <div class="order-history-grid">
-                        <div class="order-meta-item">
-                            <span>Ngay dat</span>
-                            <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
-                        </div>
+            <div class="orders-list-scroll">
+                <div class="orders-list">
+                    @foreach (var order in Model.Orders)
+                    {
+                        <article class="order-history-card">
+                            <div class="order-history-top">
+                                <div class="order-history-title">
+                                    <span class="order-chip">Don #@order.OrderId</span>
+                                    <span class="order-chip order-chip-soft">@order.TotalItems san pham</span>
+                                </div>
 
-                        <div class="order-meta-item">
-                            <span>Nguoi nhan</span>
-                            <strong>@order.ReceiverName</strong>
-                            <small>@order.ReceiverPhone</small>
-                        </div>
+                                <div class="order-history-total">@order.TotalAmount.ToString("N0") đ</div>
+                            </div>
 
-                        <div class="order-meta-item order-meta-item-wide">
-                            <span>Dia chi giao hang</span>
-                            <strong>@order.ShippingAddress</strong>
-                        </div>
-                    </div>
+                            <div class="order-history-grid">
+                                <div class="order-meta-item">
+                                    <span>Ngay dat</span>
+                                    <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                </div>
 
-                    <div class="order-history-footer">
-                        <div class="order-status-cluster">
-                            <span class="order-status-pill">@order.Status</span>
-                            <span class="order-status-pill order-status-pill-muted">@order.PaymentStatus</span>
-                            <span class="order-status-pill order-status-pill-warm">@order.PaymentMethod</span>
-                        </div>
+                                <div class="order-meta-item">
+                                    <span>Nguoi nhan</span>
+                                    <strong>@order.ReceiverName</strong>
+                                    <small>@order.ReceiverPhone</small>
+                                </div>
 
-                        <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
-                            Xem chi tiet
-                        </a>
-                    </div>
-                </article>
-            }
-        </div>
+                                <div class="order-meta-item order-meta-item-wide">
+                                    <span>Dia chi giao hang</span>
+                                    <strong>@order.ShippingAddress</strong>
+                                </div>
+                            </div>
+
+                            <div class="order-history-footer">
+                                <div class="order-status-cluster">
+                                    <span class="order-status-pill">@order.Status</span>
+                                    <span class="order-status-pill order-status-pill-muted">@order.PaymentStatus</span>
+                                    <span class="order-status-pill order-status-pill-warm">@order.PaymentMethod</span>
+                                </div>
+
+                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
+                                    Xem chi tiet
+                                </a>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+        </section>
     }
 </div>

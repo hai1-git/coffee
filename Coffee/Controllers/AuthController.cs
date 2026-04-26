@@ -2,12 +2,15 @@
 using Coffee.DTO;
 using Coffee.Helper;
 using Coffee.Models;
+using Coffee.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 
 namespace Coffee.Controllers
@@ -15,11 +18,13 @@ namespace Coffee.Controllers
     public class AuthController : Controller
     {
         private readonly CoffeeShopDbContext db;
+        private readonly EmailService emailService;
         private readonly PasswordHasherHelper hasher = new PasswordHasherHelper();
 
-        public AuthController(CoffeeShopDbContext context)
+        public AuthController(CoffeeShopDbContext context, EmailService emailService)
         {
             db = context;
+            this.emailService = emailService;
         }
 
         // =========================
@@ -136,6 +141,89 @@ namespace Coffee.Controllers
             );
 
             return RedirectToAction("Index", "Products");
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordDTO());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            var normalizedEmail = NormalizeEmail(dto.Email);
+            var user = db.Users.FirstOrDefault(x => x.Email.ToLower() == normalizedEmail);
+
+            try
+            {
+                if (user != null && user.IsLocked != true && user.IsActive != false)
+                {
+                    var verificationCode = GenerateResetCode();
+
+                    user.PasswordResetCodeHash = HashResetCode(verificationCode);
+                    user.PasswordResetCodeExpiresAt = DateTime.UtcNow.AddMinutes(10);
+
+                    db.SaveChanges();
+
+                    await emailService.SendPasswordResetCodeAsync(user.Email, user.UserName, verificationCode);
+                }
+
+                TempData["ResetPasswordInfo"] = "Neu email ton tai trong he thong, ma xac nhan da duoc gui ve Gmail cua ban.";
+                return RedirectToAction(nameof(ResetPassword), new { email = dto.Email.Trim() });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Khong the gui ma xac nhan luc nay. {ex.Message}");
+                return View(dto);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string? email = null)
+        {
+            return View(new ResetPasswordDTO
+            {
+                Email = email ?? string.Empty
+            });
+        }
+
+        [HttpPost]
+        public IActionResult ResetPassword(ResetPasswordDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            var normalizedEmail = NormalizeEmail(dto.Email);
+            var user = db.Users.FirstOrDefault(x => x.Email.ToLower() == normalizedEmail);
+
+            if (user == null ||
+                string.IsNullOrWhiteSpace(user.PasswordResetCodeHash) ||
+                user.PasswordResetCodeExpiresAt == null ||
+                user.PasswordResetCodeExpiresAt < DateTime.UtcNow ||
+                user.PasswordResetCodeHash != HashResetCode(dto.VerificationCode.Trim()))
+            {
+                ModelState.AddModelError(string.Empty, "Ma xac nhan khong hop le hoac da het han.");
+                return View(dto);
+            }
+
+            if (hasher.Verify(user, user.Password, dto.NewPassword))
+            {
+                ModelState.AddModelError("NewPassword", "Mat khau moi khong duoc trung voi mat khau cu.");
+                return View(dto);
+            }
+
+            user.Password = hasher.Hash(user, dto.NewPassword);
+            user.PasswordResetCodeHash = null;
+            user.PasswordResetCodeExpiresAt = null;
+
+            db.SaveChanges();
+
+            TempData["AuthSuccess"] = "Dat lai mat khau thanh cong. Bay gio ban co the dang nhap bang mat khau moi.";
+            return RedirectToAction(nameof(Login));
         }
 
         // đổi mật khẩu (chỉ user đã login mới vào được)
@@ -260,6 +348,21 @@ namespace Coffee.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            return (email ?? string.Empty).Trim().ToLowerInvariant();
+        }
+
+        private static string GenerateResetCode()
+        {
+            return RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+        }
+
+        private static string HashResetCode(string code)
+        {
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim())));
         }
     }
 }

@@ -142,6 +142,8 @@ public partial class CoffeeShopDbContext : DbContext
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
             entity.Property(e => e.LockReason).HasMaxLength(200);
             entity.Property(e => e.Password).HasMaxLength(255);
+            entity.Property(e => e.PasswordResetCodeExpiresAt).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.PasswordResetCodeHash).HasMaxLength(128);
             entity.Property(e => e.Phone).HasMaxLength(20);
             entity.Property(e => e.UserName).HasMaxLength(15);
 

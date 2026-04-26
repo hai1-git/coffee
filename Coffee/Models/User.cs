@@ -27,6 +27,10 @@ public partial class User
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? PasswordResetCodeHash { get; set; }
+
+    public DateTime? PasswordResetCodeExpiresAt { get; set; }
+
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
