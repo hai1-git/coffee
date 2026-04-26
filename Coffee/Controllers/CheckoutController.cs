@@ -5,6 +5,7 @@ using Coffee.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Text.Json;
 
 namespace Coffee.Controllers
@@ -162,9 +163,11 @@ namespace Coffee.Controllers
                 db.SaveChanges();
                 transaction.Commit();
             }
-            catch
+            catch (Exception ex)
             {
                 transaction.Rollback();
+                Console.WriteLine("ERROR CHECKOUT: " + ex.Message);
+                Console.WriteLine(ex.StackTrace);
                 ModelState.AddModelError(string.Empty, "Khong the xu ly thanh toan luc nay. Vui long thu lai.");
                 return View(checkoutModel);
             }

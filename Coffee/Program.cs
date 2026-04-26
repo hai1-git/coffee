@@ -18,8 +18,8 @@ internal class Program
         // 👉 DB
         var myConnectionString = builder.Configuration.GetConnectionString("MyConnectString");
         builder.Services.AddDbContext<CoffeeShopDbContext>(options =>
-            options.UseNpgsql(myConnectionString));
-        //options.UseSqlServer(myConnectionString));
+            //options.UseNpgsql(myConnectionString));
+        options.UseSqlServer(myConnectionString));
 
 
         // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
