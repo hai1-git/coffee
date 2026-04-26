@@ -3,15 +3,19 @@
     Layout = "_ProductsCoffee";
 }
 
-<div class="container py-4">
+@section Styles {
+    <link rel="stylesheet" href="~/css/Checkout/checkout.css" />
+}
+
+<div class="checkout-page container py-4 py-lg-5">
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="checkout-section-title">
                 <h4 class="mb-0">San pham da chon</h4>
                 <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-dark btn-sm">Quay lai gio hang</a>
             </div>
 
-            <div class="border rounded p-4 bg-white mb-4">
+            <div class="checkout-info-card mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Thong tin nhan hang</h5>
                     <a asp-controller="Auth" asp-action="Profile" class="btn btn-outline-secondary btn-sm">
@@ -47,26 +51,42 @@
                 </div>
             </div>
 
-            @foreach (var item in Model.Items)
-            {
-                <div class="d-flex justify-content-between align-items-center border rounded px-3 py-3 mb-3 bg-white">
+            <section class="checkout-products-panel">
+                <div class="checkout-products-panel-header">
                     <div>
-                        <div class="fw-bold">@item.ProductName</div>
-                        <small class="text-muted">Don gia: @item.Price.ToString("N0")</small>
+                        <h5 class="mb-1">Danh sach san pham</h5>
+                        <p class="text-muted mb-0">Neu don co nhieu mon, ban cuon ben trong khung nay de phan nhap thong tin va thanh toan van gon o tren.</p>
                     </div>
-                    <div>x @item.Quantity</div>
-                    <div class="text-danger fw-bold">@item.SubTotal.ToString("N0")</div>
+
+                    <span class="checkout-chip">@Model.Items.Count san pham</span>
                 </div>
-            }
+
+                <div class="checkout-products-scroll">
+                    <div class="checkout-products-list">
+                        @foreach (var item in Model.Items)
+                        {
+                            <article class="checkout-product-card">
+                                <div class="checkout-product-main">
+                                    <div class="checkout-product-name">@item.ProductName</div>
+                                    <div class="checkout-product-meta">Don gia: @item.Price.ToString("N0") đ</div>
+                                </div>
+
+                                <div class="checkout-product-qty">x @item.Quantity</div>
+                                <div class="checkout-product-subtotal">@item.SubTotal.ToString("N0") đ</div>
+                            </article>
+                        }
+                    </div>
+                </div>
+            </section>
         </div>
 
         <div class="col-lg-4">
-            <div class="border rounded p-4 bg-white">
+            <div class="checkout-summary-card">
                 <h4 class="mb-3">Thanh toan COD</h4>
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <div class="border rounded p-3 mb-3 bg-light">
+                <div class="checkout-payment-note p-3 mb-3">
                     <div class="fw-bold text-dark mb-2">Thanh toan khi nhan hang</div>
                     <div class="small text-muted">
                         Shop se ship den dia chi ban vua nhap. Khi nhan duoc hang, ban moi thanh toan cho shipper.
