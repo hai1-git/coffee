@@ -1,86 +1,117 @@
 ﻿@model Coffee.DTO.ProductDTO
 
 @{
-    ViewData["Title"] = "Chi tiết sản phẩm";
+    ViewData["Title"] = "Chi tiet san pham";
+    Layout = "_ProductsCoffee";
+    var productDescription = string.IsNullOrWhiteSpace(Model.Description)
+        ? "Mon duoc trinh bay gon gang de ban chon nhanh, dat mon de va theo doi don hang thoai mai hon tren moi thiet bi."
+        : Model.Description.Trim();
+    var productImage = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? Url.Content("~/img/menu-1.jpg")
+        : Model.ImageUrl;
 }
 
-<div class="container py-5">
+@section Styles {
+    <link rel="stylesheet" href="~/css/Products/product-details.css" />
+}
 
-    <div class="row g-5">
+@await Html.PartialAsync("~/Views/Products/_Header.cshtml")
 
-        <!-- IMAGE -->
-        <div class="col-md-6">
+<section class="product-detail-page">
+    <div class="container product-detail-container py-4 py-lg-5">
+        <div class="product-detail-shell">
+            <div class="product-detail-visual">
+                <div class="product-detail-image-card">
+                    <div class="product-detail-image-wrap">
+                        <img src="@productImage" alt="@Model.ProductName" />
+                    </div>
 
-            <div class="border rounded-4 overflow-hidden shadow-sm">
-                <img src="@Model.ImageUrl"
-                     class="w-100"
-                     style="height:400px; object-fit:cover;">
+                    <div class="product-detail-image-footer">
+                        <span class="product-detail-chip">
+                            <i class="fas fa-mug-hot"></i>
+                            Phuc vu tai quan
+                        </span>
+                        <span class="product-detail-chip product-detail-chip-soft">
+                            <i class="fas fa-bolt"></i>
+                            Dat mon nhanh gon
+                        </span>
+                    </div>
+                </div>
             </div>
 
+            <div class="product-detail-content">
+                <div class="product-detail-card">
+                    <div class="product-detail-heading">
+                        <span class="product-detail-eyebrow">Chi tiet san pham</span>
+                        <h1>@Model.ProductName</h1>
+                        <p>@productDescription</p>
+                    </div>
+
+                    <div class="product-detail-price-row">
+                        <div>
+                            <div class="product-detail-label">Gia ban</div>
+                            <div class="product-detail-price">@Model.Price.ToString("N0") đ</div>
+                        </div>
+
+                        <div class="product-detail-stock">
+                            <i class="fas fa-check-circle"></i>
+                            <span>San sang phuc vu</span>
+                        </div>
+                    </div>
+
+                    <div class="product-detail-purchase">
+                        <div class="product-detail-purchase-head">
+                            <div>
+                                <h5>Chon so luong</h5>
+                                <p>Dieu chinh so luong truoc khi them vao gio hoac dat ngay.</p>
+                            </div>
+                        </div>
+
+                        <div class="input-group product-detail-quantity">
+                            <button type="button" class="btn btn-outline-secondary btn-minus">-</button>
+
+                            <input type="text"
+                                   class="form-control text-center quantity-input"
+                                   name="quantity"
+                                   form="buy-now-detail-@Model.Id"
+                                   value="1">
+
+                            <button type="button" class="btn btn-outline-secondary btn-plus">+</button>
+                        </div>
+
+                        <div class="product-detail-actions">
+                            <button class="btn btn-dark btn-lg btn-add-cart product-detail-action"
+                                    data-productid="@Model.Id">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                Them vao gio
+                            </button>
+
+                            <form id="buy-now-detail-@Model.Id"
+                                  asp-controller="Checkout"
+                                  asp-action="BuyNow"
+                                  method="get"
+                                  class="m-0">
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-warning btn-lg fw-bold w-100 product-detail-action">
+                                    <i class="fas fa-credit-card mr-2"></i>
+                                    Thanh toan ngay
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <a asp-controller="Products"
+                       asp-action="Index"
+                       class="product-detail-backlink">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Quay lai danh sach san pham
+                    </a>
+                </div>
+            </div>
         </div>
-
-        <!-- INFO -->
-        <div class="col-md-6 d-flex flex-column">
-
-            <h2 class="fw-bold mb-3">
-                @Model.ProductName
-            </h2>
-
-            <p class="text-muted">
-                @Model.Description
-            </p>
-
-            <h3 class="text-danger fw-bold mb-4">
-                @Model.Price.ToString("N0") đ
-            </h3>
-
-            <!-- QTY -->
-            <div class="input-group mb-4" style="max-width:200px;">
-                <button class="btn btn-outline-secondary btn-minus">-</button>
-
-                <input type="text"
-                       class="form-control text-center quantity-input"
-                       name="quantity"
-                       form="buy-now-detail-@Model.Id"
-                       value="1">
-
-                <button class="btn btn-outline-secondary btn-plus">+</button>
-            </div>
-
-            <!-- BUTTON -->
-            <div class="d-grid gap-3">
-
-                <button class="btn btn-dark btn-lg btn-add-cart"
-                        data-productid="@Model.Id">
-                    🛒 Thêm vào giỏ
-                </button>
-
-                <form id="buy-now-detail-@Model.Id"
-                      asp-controller="Checkout"
-                      asp-action="BuyNow"
-                      method="get"
-                      class="m-0">
-                    <input type="hidden" name="productId" value="@Model.Id" />
-                    <button type="submit" class="btn btn-warning btn-lg fw-bold w-100">
-                        ⚡ Thanh toán ngay
-                    </button>
-                </form>
-
-                <a asp-controller="Products"
-                   asp-action="Index"
-                   class="btn btn-outline-dark">
-                    ← Quay lại sản phẩm
-                </a>
-
-            </div>
-
-        </div>
-
     </div>
-
-</div>
+</section>
 
 @section Scripts {
-    <script src="~/js/Products/count.js" asp-append-version="true"></script>
     <script src="~/js/Products/Products.js" asp-append-version="true"></script>
 }

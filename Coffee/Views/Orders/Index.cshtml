@@ -3,57 +3,79 @@
     Layout = "_ProductsCoffee";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+@section Styles {
+    <link rel="stylesheet" href="~/css/Orders/orders.css" />
+}
+
+@await Html.PartialAsync("~/Views/Products/_Header.cshtml")
+
+<div class="orders-page container py-4 py-lg-5">
+    <div class="orders-hero">
         <div>
-            <h3 class="mb-1">Lich su don hang</h3>
-            <div class="text-muted">Xem lai cac don hang COD ban da dat.</div>
+            <div class="orders-eyebrow">Theo doi don COD</div>
+            <h3 class="mb-2">Lich su don hang</h3>
+            <p class="text-muted mb-0">Tat ca don hang duoc gom lai gon gang de ban xem nhanh tren mobile va desktop.</p>
         </div>
 
-        <a asp-controller="Products" asp-action="Index" class="btn btn-outline-dark btn-sm">
+        <a asp-controller="Products" asp-action="Index" class="btn btn-dark orders-hero-action">
+            <i class="fas fa-coffee mr-2"></i>
             Tiep tuc mua sam
         </a>
     </div>
 
     @if (!Model.Orders.Any())
     {
-        <div class="border rounded p-4 bg-white text-center">
+        <div class="orders-empty-state">
             <h5 class="mb-2">Ban chua co don hang nao</h5>
-            <div class="text-muted mb-3">Khi dat hang COD thanh cong, don hang se hien thi tai day.</div>
+            <div class="text-muted mb-3">Khi dat hang thanh cong, lich su se hien thi day du ngay tai day.</div>
             <a asp-controller="Products" asp-action="Index" class="btn btn-dark">Mua ngay</a>
         </div>
     }
     else
     {
-        <div class="row g-3">
+        <div class="orders-list">
             @foreach (var order in Model.Orders)
             {
-                <div class="col-12">
-                    <div class="border rounded p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                            <div>
-                                <div class="fw-bold mb-1">Don #@order.OrderId</div>
-                                <div class="text-muted small">Ngay dat: @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
-                                <div class="text-muted small">Nguoi nhan: @order.ReceiverName - @order.ReceiverPhone</div>
-                                <div class="text-muted small">Dia chi: @order.ShippingAddress</div>
-                                <div class="text-muted small">So luong san pham: @order.TotalItems</div>
-                            </div>
-
-                            <div class="text-end">
-                                <div class="fw-bold text-danger mb-1">@order.TotalAmount.ToString("N0")</div>
-                                <div class="small">Trang thai don: <span class="fw-bold">@order.Status</span></div>
-                                <div class="small">Thanh toan: <span class="fw-bold">@order.PaymentStatus</span></div>
-                                <div class="small">Phuong thuc: <span class="fw-bold">@order.PaymentMethod</span></div>
-                            </div>
+                <article class="order-history-card">
+                    <div class="order-history-top">
+                        <div class="order-history-title">
+                            <span class="order-chip">Don #@order.OrderId</span>
+                            <span class="order-chip order-chip-soft">@order.TotalItems san pham</span>
                         </div>
 
-                        <div class="mt-3">
-                            <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
-                                Xem chi tiet
-                            </a>
+                        <div class="order-history-total">@order.TotalAmount.ToString("N0") đ</div>
+                    </div>
+
+                    <div class="order-history-grid">
+                        <div class="order-meta-item">
+                            <span>Ngay dat</span>
+                            <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+
+                        <div class="order-meta-item">
+                            <span>Nguoi nhan</span>
+                            <strong>@order.ReceiverName</strong>
+                            <small>@order.ReceiverPhone</small>
+                        </div>
+
+                        <div class="order-meta-item order-meta-item-wide">
+                            <span>Dia chi giao hang</span>
+                            <strong>@order.ShippingAddress</strong>
                         </div>
                     </div>
-                </div>
+
+                    <div class="order-history-footer">
+                        <div class="order-status-cluster">
+                            <span class="order-status-pill">@order.Status</span>
+                            <span class="order-status-pill order-status-pill-muted">@order.PaymentStatus</span>
+                            <span class="order-status-pill order-status-pill-warm">@order.PaymentMethod</span>
+                        </div>
+
+                        <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
+                            Xem chi tiet
+                        </a>
+                    </div>
+                </article>
             }
         </div>
     }

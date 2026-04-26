@@ -3,13 +3,6 @@
     console.log("JS loaded");
 
     // =========================
-    // 🔥 LOAD CART COUNT
-    // =========================
-    $.get("/Cart/GetCartCount", function (res) {
-        $(".cart-count").text(res.count);
-    });
-
-    // =========================
     // 📦 GET CONTAINER CHUNG (FIX PRODUCT + DETAILS)
     // =========================
     function getContainer(el) {

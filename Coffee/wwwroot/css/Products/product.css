@@ -359,14 +359,14 @@ form[asp-action="Search"] {
 /* =========================
    FIX PRODUCT GRID (QUAN TRỌNG)
 ========================= */
-.row.g-4 {
+.products-grid.row.g-4 {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 20px;
 }
 
     /* bỏ bootstrap column bó width */
-    .row.g-4 > div {
+    .products-grid.row.g-4 > div {
         width: 100% !important;
         max-width: 100% !important;
     }
@@ -405,7 +405,7 @@ form[asp-action="Search"] {
 ========================= */
 @media (min-width: 1400px) {
 
-    .row.g-4 {
+    .products-grid.row.g-4 {
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     }
 }

@@ -40,7 +40,7 @@
 
 
     @* Phần thân trang *@
-    <main id="main-content" class="px-5">
+    <main id="main-content" class="products-main">
         @RenderBody()
     </main>
 
@@ -60,6 +60,7 @@
 
     <!-- Template Javascript -->
     <script src="~/js/main.js"></script>
+    <script src="~/js/site-cart-count.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

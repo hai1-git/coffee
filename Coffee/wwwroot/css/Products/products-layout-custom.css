@@ -36,3 +36,17 @@
         .btn-back-home:hover i {
             transform: translateX(-5px);
         }
+
+.products-main {
+    padding: 0 clamp(1rem, 4vw, 3rem) 2.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .back-home-wrapper {
+        padding: 16px 0 0 16px;
+    }
+
+    .products-main {
+        padding: 0 0.875rem 2rem;
+    }
+}
