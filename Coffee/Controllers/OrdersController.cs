@@ -1,4 +1,4 @@
-using Coffee.Data;
+﻿using Coffee.Data;
 using Coffee.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +21,9 @@ namespace Coffee.Controllers
             return int.TryParse(User.FindFirst("UserId")?.Value, out var userId) ? userId : 0;
         }
 
+        // =========================
+        // 📦 ORDER LIST
+        // =========================
         [HttpGet]
         public IActionResult Index()
         {
@@ -32,24 +35,43 @@ namespace Coffee.Controllers
 
             var orders = db.Orders
                 .AsNoTracking()
+                .Include(x => x.Payments)
+                .Include(x => x.OrderDetails)
+                .Include(x => x.User)
                 .Where(x => x.UserId == userId)
                 .OrderByDescending(x => x.OrderDate)
                 .Select(order => new OrderHistoryItemViewModel
                 {
                     OrderId = order.OrderId,
                     OrderDate = order.OrderDate ?? DateTime.UtcNow,
-                    ReceiverName = order.ReceiverName ?? (order.User != null ? order.User.UserName : string.Empty),
-                    ReceiverPhone = order.ReceiverPhone ?? (order.User != null ? order.User.Phone ?? string.Empty : string.Empty),
-                    ShippingAddress = order.ShippingAddress ?? (order.User != null ? order.User.Address ?? string.Empty : string.Empty),
+
+                    ReceiverName = !string.IsNullOrEmpty(order.ReceiverName)
+                        ? order.ReceiverName
+                        : order.User != null ? order.User.UserName : "",
+
+                    ReceiverPhone = !string.IsNullOrEmpty(order.ReceiverPhone)
+                        ? order.ReceiverPhone
+                        : order.User != null ? order.User.Phone ?? "" : "",
+
+                    ShippingAddress = !string.IsNullOrEmpty(order.ShippingAddress)
+                        ? order.ShippingAddress
+                        : order.User != null ? order.User.Address ?? "" : "",
+
                     Status = order.Status ?? "Cho xac nhan",
-                    PaymentMethod = order.Payments
-                        .Select(payment => payment.PaymentMethod)
-                        .FirstOrDefault() ?? "COD",
-                    PaymentStatus = order.Payments
-                        .Select(payment => payment.PaymentStatus)
-                        .FirstOrDefault() ?? "Chua thanh toan",
+
+                    PaymentMethod = order.Payments != null && order.Payments.Any()
+                        ? order.Payments.Select(p => p.PaymentMethod).FirstOrDefault() ?? "COD"
+                        : "COD",
+
+                    PaymentStatus = order.Payments != null && order.Payments.Any()
+                        ? order.Payments.Select(p => p.PaymentStatus).FirstOrDefault() ?? "Chua thanh toan"
+                        : "Chua thanh toan",
+
                     TotalAmount = order.TotalAmount ?? 0,
-                    TotalItems = order.OrderDetails.Sum(detail => detail.Quantity ?? 0)
+
+                    TotalItems = order.OrderDetails != null
+                        ? order.OrderDetails.Sum(d => d.Quantity ?? 0)
+                        : 0
                 })
                 .ToList();
 
@@ -59,6 +81,9 @@ namespace Coffee.Controllers
             });
         }
 
+        // =========================
+        // 📄 ORDER DETAILS
+        // =========================
         [HttpGet]
         public IActionResult Details(int id)
         {
@@ -70,27 +95,46 @@ namespace Coffee.Controllers
 
             var order = db.Orders
                 .AsNoTracking()
+                .Include(x => x.Payments)
+                .Include(x => x.OrderDetails)
+                    .ThenInclude(d => d.Product)
+                .Include(x => x.User)
                 .Where(x => x.OrderId == id && x.UserId == userId)
                 .Select(order => new OrderDetailViewModel
                 {
                     OrderId = order.OrderId,
                     OrderDate = order.OrderDate ?? DateTime.UtcNow,
-                    ReceiverName = order.ReceiverName ?? (order.User != null ? order.User.UserName : string.Empty),
-                    ReceiverPhone = order.ReceiverPhone ?? (order.User != null ? order.User.Phone ?? string.Empty : string.Empty),
-                    ShippingAddress = order.ShippingAddress ?? (order.User != null ? order.User.Address ?? string.Empty : string.Empty),
+
+                    ReceiverName = !string.IsNullOrEmpty(order.ReceiverName)
+                        ? order.ReceiverName
+                        : order.User != null ? order.User.UserName : "",
+
+                    ReceiverPhone = !string.IsNullOrEmpty(order.ReceiverPhone)
+                        ? order.ReceiverPhone
+                        : order.User != null ? order.User.Phone ?? "" : "",
+
+                    ShippingAddress = !string.IsNullOrEmpty(order.ShippingAddress)
+                        ? order.ShippingAddress
+                        : order.User != null ? order.User.Address ?? "" : "",
+
                     Status = order.Status ?? "Cho xac nhan",
-                    PaymentMethod = order.Payments
-                        .Select(payment => payment.PaymentMethod)
-                        .FirstOrDefault() ?? "COD",
-                    PaymentStatus = order.Payments
-                        .Select(payment => payment.PaymentStatus)
-                        .FirstOrDefault() ?? "Chua thanh toan",
-                    TransactionId = order.Payments
-                        .Select(payment => payment.TransactionId)
-                        .FirstOrDefault() ?? string.Empty,
+
+                    PaymentMethod = order.Payments != null && order.Payments.Any()
+                        ? order.Payments.Select(p => p.PaymentMethod).FirstOrDefault() ?? "COD"
+                        : "COD",
+
+                    PaymentStatus = order.Payments != null && order.Payments.Any()
+                        ? order.Payments.Select(p => p.PaymentStatus).FirstOrDefault() ?? "Chua thanh toan"
+                        : "Chua thanh toan",
+
+                    TransactionId = order.Payments != null && order.Payments.Any()
+                        ? order.Payments.Select(p => p.TransactionId).FirstOrDefault() ?? ""
+                        : "",
+
                     TotalAmount = order.TotalAmount ?? 0,
-                    Items = order.OrderDetails
-                        .Select(detail => new OrderDetailItemViewModel
+
+                    Items = order.OrderDetails != null
+                        ? order.OrderDetails.Select(detail => new OrderDetailItemViewModel
                         {
                             ProductId = detail.ProductId ?? 0,
                             ProductName = detail.Product != null
@@ -98,8 +142,8 @@ namespace Coffee.Controllers
                                 : "San pham",
                             Price = detail.Price ?? 0,
                             Quantity = detail.Quantity ?? 0
-                        })
-                        .ToList()
+                        }).ToList()
+                        : new List<OrderDetailItemViewModel>()
                 })
                 .FirstOrDefault();
 
