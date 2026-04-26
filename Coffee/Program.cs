@@ -2,6 +2,7 @@
 using Coffee.Models;
 using Coffee.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 internal class Program
@@ -17,6 +18,11 @@ internal class Program
 
         // 👉 DB
         var myConnectionString = builder.Configuration.GetConnectionString("MyConnectString");
+        if (string.IsNullOrWhiteSpace(myConnectionString))
+        {
+            throw new InvalidOperationException("Connection string 'MyConnectString' was not found.");
+        }
+
         builder.Services.AddDbContext<CoffeeShopDbContext>(options =>
             options.UseNpgsql(myConnectionString));
         //options.UseSqlServer(myConnectionString));
@@ -38,23 +44,19 @@ internal class Program
                 options.SlidingExpiration = true;  //Nếu muốn user không bị out khi đang dùng
             });
 
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
         var app = builder.Build();
 
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-
-            if (db.Database.IsSqlServer())
-            {
-                db.Database.ExecuteSqlRaw(@"
-IF COL_LENGTH('Orders', 'ReceiverName') IS NULL
-    ALTER TABLE Orders ADD ReceiverName NVARCHAR(100) NULL;
-IF COL_LENGTH('Orders', 'ReceiverPhone') IS NULL
-    ALTER TABLE Orders ADD ReceiverPhone NVARCHAR(20) NULL;
-IF COL_LENGTH('Orders', 'ShippingAddress') IS NULL
-    ALTER TABLE Orders ADD ShippingAddress NVARCHAR(300) NULL;
-");
-            }
+            db.Database.Migrate();
         }
 
         // =========================
@@ -86,6 +88,7 @@ IF COL_LENGTH('Orders', 'ShippingAddress') IS NULL
             app.UseHsts();
         }
 
+        app.UseForwardedHeaders();
         app.UseHttpsRedirection();
         app.UseStaticFiles();
 
