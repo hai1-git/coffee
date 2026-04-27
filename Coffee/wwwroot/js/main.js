@@ -1,26 +1,56 @@
 (function ($) {
     "use strict";
     
+    function showCoffeeDropdown($dropdown) {
+        clearTimeout($dropdown.data('coffeeHoverTimer'));
+        $dropdown.addClass('show');
+        $dropdown.find('.dropdown-toggle').attr('aria-expanded', 'true');
+        $dropdown.find('.dropdown-menu').addClass('show');
+    }
+
+    function hideCoffeeDropdown($dropdown) {
+        clearTimeout($dropdown.data('coffeeHoverTimer'));
+        $dropdown.removeClass('show');
+        $dropdown.find('.dropdown-toggle').attr('aria-expanded', 'false');
+        $dropdown.find('.dropdown-menu').removeClass('show');
+    }
+
+    function scheduleCoffeeDropdownHide($dropdown) {
+        clearTimeout($dropdown.data('coffeeHoverTimer'));
+
+        var timer = window.setTimeout(function () {
+            hideCoffeeDropdown($dropdown);
+        }, 180);
+
+        $dropdown.data('coffeeHoverTimer', timer);
+    }
+
     // Desktop hover dropdown without the flicker caused by click toggling.
     $(document).ready(function () {
         function toggleNavbarMethod() {
             var $dropdowns = $('.navbar .dropdown');
+            var $hoverTargets = $dropdowns.find('.dropdown-toggle, .dropdown-menu');
 
             $dropdowns.off('.coffeeHover');
+            $hoverTargets.off('.coffeeHover');
 
             if ($(window).width() > 992) {
                 $dropdowns.on('mouseenter.coffeeHover', function () {
-                    var $dropdown = $(this);
-
-                    $dropdown.addClass('show');
-                    $dropdown.find('.dropdown-toggle').attr('aria-expanded', 'true');
-                    $dropdown.find('.dropdown-menu').addClass('show');
+                    showCoffeeDropdown($(this));
                 }).on('mouseleave.coffeeHover', function () {
-                    var $dropdown = $(this);
+                    scheduleCoffeeDropdownHide($(this));
+                }).on('focusin.coffeeHover', function () {
+                    showCoffeeDropdown($(this));
+                }).on('focusout.coffeeHover', function (event) {
+                    if ($(this).has(event.relatedTarget).length === 0) {
+                        scheduleCoffeeDropdownHide($(this));
+                    }
+                });
 
-                    $dropdown.removeClass('show');
-                    $dropdown.find('.dropdown-toggle').attr('aria-expanded', 'false');
-                    $dropdown.find('.dropdown-menu').removeClass('show');
+                $hoverTargets.on('mouseenter.coffeeHover', function () {
+                    showCoffeeDropdown($(this).closest('.dropdown'));
+                }).on('mouseleave.coffeeHover', function () {
+                    scheduleCoffeeDropdownHide($(this).closest('.dropdown'));
                 });
             } else {
                 $dropdowns.removeClass('show');
