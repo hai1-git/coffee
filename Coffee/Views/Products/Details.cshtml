@@ -15,8 +15,6 @@
     <link rel="stylesheet" href="~/css/Products/product-details.css" />
 }
 
-@await Html.PartialAsync("~/Views/Products/_Header.cshtml")
-
 <section class="product-detail-page">
     <div class="container product-detail-container py-4 py-lg-5">
         <div class="product-detail-shell">
@@ -67,8 +65,8 @@
                             </div>
                         </div>
 
-                        <div class="input-group product-detail-quantity">
-                            <button type="button" class="btn btn-outline-secondary btn-minus">-</button>
+                        <div class="input-group product-detail-quantity product-quantity-group">
+                            <button type="button" class="btn btn-minus product-qty-btn">-</button>
 
                             <input type="text"
                                    class="form-control text-center quantity-input"
@@ -76,11 +74,11 @@
                                    form="buy-now-detail-@Model.Id"
                                    value="1">
 
-                            <button type="button" class="btn btn-outline-secondary btn-plus">+</button>
+                            <button type="button" class="btn btn-plus product-qty-btn">+</button>
                         </div>
 
                         <div class="product-detail-actions">
-                            <button class="btn btn-dark btn-lg btn-add-cart product-detail-action"
+                            <button class="btn btn-lg btn-add-cart product-detail-action product-action product-action-primary"
                                     data-productid="@Model.Id">
                                 <i class="fas fa-shopping-cart mr-2"></i>
                                 Them vao gio
@@ -92,7 +90,7 @@
                                   method="get"
                                   class="m-0">
                                 <input type="hidden" name="productId" value="@Model.Id" />
-                                <button type="submit" class="btn btn-warning btn-lg fw-bold w-100 product-detail-action">
+                                <button type="submit" class="btn btn-lg w-100 product-detail-action product-action product-action-accent">
                                     <i class="fas fa-credit-card mr-2"></i>
                                     Thanh toan ngay
                                 </button>

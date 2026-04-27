@@ -1,26 +1,77 @@
-﻿<div class="d-flex align-items-center justify-content-around">
-    <div class="">
-        <a href="/" class="btn-back-home">
-            <i class="fas fa-long-arrow-alt-left"></i> Back to Home
-        </a>
-    </div>
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var title = "Kham pha Koppee";
+    var subtitle = "Di chuyen giua thuc don, gio hang va don hang trong cung mot khu vuc dieu huong gon gang.";
 
-    @if (User.Identity?.IsAuthenticated == true)
+    if (string.Equals(currentController, "Products", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase))
     {
-
-        <a href="/Cart">
-            🛒 Giỏ hàng
-            <span class="badge bg-danger cart-count">0</span>
-        </a>
-
-        <a href="/Auth/Profile">
-            📍 Dia chi
-        </a>
-
-        <a href="/Orders">
-            📦 Đơn hàng
-        </a>
+        title = "Thuc don hom nay";
+        subtitle = "Loc mon nhanh hon, tim dung huong vi ban muon va chuyen trang khong bi mat huong dieu huong.";
     }
-    @* Search *@
-    @await Html.PartialAsync("~/Views/Products/_Search.cshtml")
-</div>
+    else if (string.Equals(currentController, "Products", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Search", StringComparison.OrdinalIgnoreCase))
+    {
+        title = "Ket qua tim kiem";
+        subtitle = "So sanh cac mon ngay trong danh sach va tiep tuc tim kiem ma khong can quay lai dau trang.";
+    }
+    else if (string.Equals(currentController, "Products", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Details", StringComparison.OrdinalIgnoreCase))
+    {
+        title = "Chi tiet san pham";
+        subtitle = "Xem nhanh thong tin mon, quay lai thuc don hoac chuyen sang gio hang de dat mua.";
+    }
+    else if (string.Equals(currentController, "Cart", StringComparison.OrdinalIgnoreCase))
+    {
+        title = "Gio hang";
+        subtitle = "Kiem tra mon da chon, chinh sua so luong va di tiep sang buoc thanh toan that nhanh.";
+    }
+    else if (string.Equals(currentController, "Checkout", StringComparison.OrdinalIgnoreCase))
+    {
+        title = "Thanh toan";
+        subtitle = "Thong tin giao hang va cach thanh toan duoc gom gon de ban xac nhan don de hon.";
+    }
+    else if (string.Equals(currentController, "Orders", StringComparison.OrdinalIgnoreCase))
+    {
+        title = "Quan ly don hang";
+        subtitle = "Theo doi trang thai don, xem lai chi tiet va quay ve menu mua sam bat ky luc nao.";
+    }
+    else if (string.Equals(currentController, "Admin", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(currentController, "AdminProducts", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(currentController, "Categories", StringComparison.OrdinalIgnoreCase))
+    {
+        title = "Khu vuc quan tri";
+        subtitle = "Thanh dieu huong duoc giu thong nhat de viec quay lai dashboard va menu luon thuan tay.";
+    }
+}
+
+<section class="coffee-page-toolbar">
+    <div class="coffee-page-toolbar-shell">
+        <div class="coffee-toolbar-copy">
+            <span class="coffee-toolbar-kicker">KOPPEE NAVIGATION</span>
+            <h1>@title</h1>
+            <p>@subtitle</p>
+        </div>
+
+        <div class="coffee-toolbar-links">
+            <a asp-controller="Home" asp-action="Index" class="coffee-toolbar-link">
+                <i class="fas fa-home"></i>
+                <span>Trang chu</span>
+            </a>
+            <a asp-controller="Products" asp-action="Index" class="coffee-toolbar-link">
+                <i class="fas fa-mug-hot"></i>
+                <span>Thuc don</span>
+            </a>
+            <a asp-controller="Cart" asp-action="Index" class="coffee-toolbar-link">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Gio hang</span>
+            </a>
+            <a asp-controller="Orders" asp-action="Index" class="coffee-toolbar-link">
+                <i class="fas fa-receipt"></i>
+                <span>Don hang</span>
+            </a>
+        </div>
+
+        <div class="coffee-toolbar-search">
+            @await Html.PartialAsync("~/Views/Products/_Search.cshtml")
+        </div>
+    </div>
+</section>

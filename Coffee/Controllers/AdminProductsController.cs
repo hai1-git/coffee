@@ -30,8 +30,15 @@ namespace Coffee.Controllers
         // =========================
         public async Task<IActionResult> Index()
         {
-            var products = _context.Products.Include(p => p.Category);
-            return View(await products.ToListAsync());
+            var products = await _context.Products
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.OrderDetails)
+                .Include(p => p.Carts)
+                .OrderByDescending(p => p.ProductId)
+                .ToListAsync();
+
+            return View(products);
         }
 
         // =========================
@@ -43,6 +50,8 @@ namespace Coffee.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.OrderDetails)
+                .Include(p => p.Carts)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
 
             if (product == null) return NotFound();
@@ -55,11 +64,7 @@ namespace Coffee.Controllers
         // =========================
         public IActionResult Create()
         {
-            ViewData["CategoryId"] = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "CategoryName");
-
+            PopulateCategoryViewData();
             return View();
         }
 
@@ -70,6 +75,12 @@ namespace Coffee.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product, IFormFile? file)
         {
+            if (!ModelState.IsValid)
+            {
+                PopulateCategoryViewData(product.CategoryId);
+                return View(product);
+            }
+
             if (file != null && file.Length > 0)
             {
                 var upload = await _cloudinary.UploadImageAsync(file);
@@ -83,20 +94,10 @@ namespace Coffee.Controllers
                 product.ImageUrl = "/img/default.png";
             }
 
-            if (ModelState.IsValid)
-            {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewData["CategoryId"] = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "CategoryName",
-                product.CategoryId);
-
-            return View(product);
+            _context.Add(product);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Da tao san pham moi thanh cong.";
+            return RedirectToAction(nameof(Index));
         }
 
         // =========================
@@ -106,15 +107,13 @@ namespace Coffee.Controllers
         {
             if (id == null) return NotFound();
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .FirstOrDefaultAsync(x => x.ProductId == id);
             if (product == null) return NotFound();
 
-            ViewData["CategoryId"] = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "CategoryName",
-                product.CategoryId);
-
+            PopulateCategoryViewData(product.CategoryId);
             return View(product);
         }
 
@@ -135,13 +134,23 @@ namespace Coffee.Controllers
             if (oldProduct == null)
                 return NotFound();
 
+            if (!ModelState.IsValid)
+            {
+                product.ImageUrl = oldProduct.ImageUrl;
+                product.ImagePublicId = oldProduct.ImagePublicId;
+                PopulateCategoryViewData(product.CategoryId);
+                return View(product);
+            }
+
             // =========================
             // 🖼 UPDATE IMAGE
             // =========================
             if (file != null && file.Length > 0)
             {
-                // ❌ xoá ảnh cũ trên cloud
-                await _cloudinary.DeleteImageAsync(oldProduct.ImagePublicId);
+                if (!string.IsNullOrWhiteSpace(oldProduct.ImagePublicId))
+                {
+                    await _cloudinary.DeleteImageAsync(oldProduct.ImagePublicId);
+                }
 
                 // 📤 upload ảnh mới
                 var upload = await _cloudinary.UploadImageAsync(file);
@@ -155,31 +164,21 @@ namespace Coffee.Controllers
                 product.ImagePublicId = oldProduct.ImagePublicId;
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Products.Any(e => e.ProductId == product.ProductId))
-                        return NotFound();
-                    else
-                        throw;
-                }
-
-                return RedirectToAction(nameof(Index));
+                _context.Update(product);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Products.Any(e => e.ProductId == product.ProductId))
+                    return NotFound();
+                else
+                    throw;
             }
 
-            ViewData["CategoryId"] = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "CategoryName",
-                product.CategoryId);
-
-            return View(product);
+            TempData["Success"] = "Da cap nhat san pham thanh cong.";
+            return RedirectToAction(nameof(Index));
         }
 
         // =========================
@@ -191,6 +190,8 @@ namespace Coffee.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.OrderDetails)
+                .Include(p => p.Carts)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
 
             if (product == null) return NotFound();
@@ -211,20 +212,49 @@ namespace Coffee.Controllers
                 return NotFound();
 
             var isInCart = _context.Carts.Any(c => c.ProductId == id);
+            var hasOrderHistory = _context.OrderDetails.Any(x => x.ProductId == id);
 
             if (isInCart)
             {
-                TempData["Error"] = "❌ Sản phẩm đang có trong giỏ hàng!";
+                TempData["Error"] = "San pham nay dang co trong gio hang, chua the xoa luc nay.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // ❌ xoá ảnh cloudinary
-            await _cloudinary.DeleteImageAsync(product.ImagePublicId);
+            if (hasOrderHistory)
+            {
+                TempData["Error"] = "San pham nay da xuat hien trong don hang, nen khong the xoa de tranh mat lich su.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.IsNullOrWhiteSpace(product.ImagePublicId))
+            {
+                await _cloudinary.DeleteImageAsync(product.ImagePublicId);
+            }
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
+            TempData["Success"] = "Da xoa san pham thanh cong.";
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private void PopulateCategoryViewData(int? selectedCategoryId = null)
+        {
+            var categories = _context.Categories
+                .AsNoTracking()
+                .OrderBy(x => x.CategoryName)
+                .ToList();
+
+            ViewData["CategoryId"] = new SelectList(
+                categories,
+                "CategoryId",
+                "CategoryName",
+                selectedCategoryId);
+
+            ViewBag.CategoryName = categories
+                .FirstOrDefault(x => x.CategoryId == selectedCategoryId)
+                ?.CategoryName
+                ?? "Chua gan category";
         }
 
         private bool ProductExists(int id)

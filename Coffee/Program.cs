@@ -28,7 +28,10 @@ internal class Program
         //options.UseSqlServer(myConnectionString));
 
         builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+        builder.Services.Configure<MomoPaymentSettings>(builder.Configuration.GetSection("MomoPaymentSettings"));
+        builder.Services.Configure<MomoBusinessSettings>(builder.Configuration.GetSection("MomoBusinessSettings"));
         builder.Services.AddTransient<EmailService>();
+        builder.Services.AddHttpClient<MomoBusinessService>();
 
         // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
         builder.Services.AddSingleton<CloudinaryService>();
@@ -56,12 +59,13 @@ internal class Program
         var app = builder.Build();
 
         PasswordResetSchemaInitializer.EnsureAsync(app.Services).GetAwaiter().GetResult();
+        OrderStatusDataInitializer.EnsureAsync(app.Services).GetAwaiter().GetResult();
 
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-            db.Database.Migrate();
-        }
+        //using (var scope = app.Services.CreateScope())
+        //{
+        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
+        //    db.Database.Migrate();
+        //}
 
         // =========================
         // 🔥 SEED DATA (THÊM Ở ĐÂY)

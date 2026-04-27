@@ -1,20 +1,35 @@
 @model Coffee.ViewModel.OrderHistoryViewModel
+@using Coffee.Helper
+@using System.Linq
 @{
     Layout = "_ProductsCoffee";
+
+    var totalOrders = Model.Orders.Count;
+    var totalCod = Model.CodOrders.Count;
+    var totalMomo = Model.MomoOrders.Count;
+    var pendingOrders = Model.Orders.Count(x => OrderStatusHelper.IsUnpaid(x.Status));
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/Orders/orders.css" />
 }
 
-@await Html.PartialAsync("~/Views/Products/_Header.cshtml")
-
 <div class="orders-page container py-4 py-lg-5">
+    @if (TempData["OrderSuccess"] != null)
+    {
+        <div class="alert alert-success mb-4">@TempData["OrderSuccess"]</div>
+    }
+
+    @if (TempData["OrderError"] != null)
+    {
+        <div class="alert alert-danger mb-4">@TempData["OrderError"]</div>
+    }
+
     <div class="orders-hero">
         <div>
-            <div class="orders-eyebrow">Theo doi don COD</div>
-            <h3 class="mb-2">Lich su don hang</h3>
-            <p class="text-muted mb-0">Tat ca don hang duoc gom lai gon gang de ban xem nhanh tren mobile va desktop.</p>
+            <div class="orders-eyebrow">Order center</div>
+            <h3 class="mb-2">Lich su don hang cua ban</h3>
+            <p class="text-muted mb-0">Don hang duoc tach rieng thanh COD va MoMo de ban xem lich su, trang thai va cach thanh toan ro rang hon.</p>
         </div>
 
         <a asp-controller="Products" asp-action="Index" class="btn btn-dark orders-hero-action">
@@ -33,63 +48,199 @@
     }
     else
     {
-        <section class="orders-list-panel">
-            <div class="orders-list-panel-header">
-                <div>
-                    <h5 class="mb-1">Danh sach don cua ban</h5>
-                    <p class="text-muted mb-0">Khi don hang nhieu hon, ban cuon ben trong khung nay de phan tieu de va nut thao tac van nam gon o tren.</p>
+        <section class="orders-stat-grid">
+            <article class="orders-stat-card">
+                <span class="orders-stat-label">Tong don</span>
+                <strong>@totalOrders</strong>
+                <small>Toan bo lich su mua hang cua ban</small>
+            </article>
+            <article class="orders-stat-card">
+                <span class="orders-stat-label">Don COD</span>
+                <strong>@totalCod</strong>
+                <small>Thanh toan khi nhan hang</small>
+            </article>
+            <article class="orders-stat-card">
+                <span class="orders-stat-label">Don MoMo</span>
+                <strong>@totalMomo</strong>
+                <small>Cac don qua vi dien tu</small>
+            </article>
+            <article class="orders-stat-card">
+                <span class="orders-stat-label">Chua thanh toan</span>
+                <strong>@pendingOrders</strong>
+                <small>Nhung don van dang cho cap nhat sang da thanh toan</small>
+            </article>
+        </section>
+
+        <section class="orders-segment-grid">
+            <section class="orders-list-panel orders-list-panel-cod">
+                <div class="orders-list-panel-header">
+                    <div>
+                        <h5 class="mb-1">Don thanh toan COD</h5>
+                        <p class="text-muted mb-0">Theo doi cac don thanh toan luc nhan hang, de xem trang thai duyet va giao don de dang hon.</p>
+                    </div>
+
+                    <span class="order-chip order-chip-cod">@totalCod don</span>
                 </div>
 
-                <span class="order-chip order-chip-soft">@Model.Orders.Count don hang</span>
-            </div>
+                @if (Model.CodOrders.Any())
+                {
+                    <div class="orders-list-scroll">
+                        <div class="orders-list">
+                            @foreach (var order in Model.CodOrders)
+                            {
+                                <article class="order-history-card is-cod">
+                                    <div class="order-history-top">
+                                        <div class="order-history-title">
+                                            <span class="order-chip">Don #@order.OrderId</span>
+                                            <span class="order-chip order-chip-soft">@order.TotalItems san pham</span>
+                                        </div>
 
-            <div class="orders-list-scroll">
-                <div class="orders-list">
-                    @foreach (var order in Model.Orders)
-                    {
-                        <article class="order-history-card">
-                            <div class="order-history-top">
-                                <div class="order-history-title">
-                                    <span class="order-chip">Don #@order.OrderId</span>
-                                    <span class="order-chip order-chip-soft">@order.TotalItems san pham</span>
-                                </div>
+                                        <div class="order-history-total">@order.TotalAmount.ToString("N0") đ</div>
+                                    </div>
 
-                                <div class="order-history-total">@order.TotalAmount.ToString("N0") đ</div>
-                            </div>
+                                    <div class="order-history-grid">
+                                        <div class="order-meta-item">
+                                            <span>Ngay dat</span>
+                                            <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                        </div>
 
-                            <div class="order-history-grid">
-                                <div class="order-meta-item">
-                                    <span>Ngay dat</span>
-                                    <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
-                                </div>
+                                        <div class="order-meta-item">
+                                            <span>Nguoi nhan</span>
+                                            <strong>@order.ReceiverName</strong>
+                                            <small>@order.ReceiverPhone</small>
+                                        </div>
 
-                                <div class="order-meta-item">
-                                    <span>Nguoi nhan</span>
-                                    <strong>@order.ReceiverName</strong>
-                                    <small>@order.ReceiverPhone</small>
-                                </div>
+                                        <div class="order-meta-item order-meta-item-wide">
+                                            <span>Dia chi giao hang</span>
+                                            <strong>@order.ShippingAddress</strong>
+                                        </div>
+                                    </div>
 
-                                <div class="order-meta-item order-meta-item-wide">
-                                    <span>Dia chi giao hang</span>
-                                    <strong>@order.ShippingAddress</strong>
-                                </div>
-                            </div>
+                                    <div class="order-history-footer">
+                                        <div class="order-status-cluster">
+                                            <span class="order-status-pill @(order.IsCancelled ? "order-status-pill-danger" : null)">@order.Status</span>
+                                            <span class="order-status-pill order-status-pill-muted">@order.PaymentStatus</span>
+                                            <span class="order-status-pill order-status-pill-warm">@order.PaymentMethod</span>
+                                        </div>
 
-                            <div class="order-history-footer">
-                                <div class="order-status-cluster">
-                                    <span class="order-status-pill">@order.Status</span>
-                                    <span class="order-status-pill order-status-pill-muted">@order.PaymentStatus</span>
-                                    <span class="order-status-pill order-status-pill-warm">@order.PaymentMethod</span>
-                                </div>
+                                        <div class="order-action-group">
+                                            @if (order.CanCancel)
+                                            {
+                                                <form asp-controller="Orders" asp-action="Cancel" method="post" class="d-inline-block">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@order.OrderId" />
+                                                    <button type="submit"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                            onclick="return confirm('Ban chac chan muon huy don #@order.OrderId?');">
+                                                        Huy don
+                                                    </button>
+                                                </form>
+                                            }
 
-                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
-                                    Xem chi tiet
-                                </a>
-                            </div>
-                        </article>
-                    }
+                                            <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
+                                                Xem chi tiet
+                                            </a>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="orders-section-empty">
+                        <i class="fas fa-truck"></i>
+                        <h6 class="mb-2">Chua co don COD</h6>
+                        <p class="mb-0">Khi ban chon thanh toan khi nhan hang, don se duoc hien thi trong khu nay.</p>
+                    </div>
+                }
+            </section>
+
+            <section class="orders-list-panel orders-list-panel-momo">
+                <div class="orders-list-panel-header">
+                    <div>
+                        <h5 class="mb-1">Don thanh toan MoMo</h5>
+                        <p class="text-muted mb-0">Tach rieng nhung don thanh toan online de ban xem nhanh giao dich da thanh cong hay dang cho xac nhan.</p>
+                    </div>
+
+                    <span class="order-chip order-chip-momo">@totalMomo don</span>
                 </div>
-            </div>
+
+                @if (Model.MomoOrders.Any())
+                {
+                    <div class="orders-list-scroll">
+                        <div class="orders-list">
+                            @foreach (var order in Model.MomoOrders)
+                            {
+                                <article class="order-history-card is-momo">
+                                    <div class="order-history-top">
+                                        <div class="order-history-title">
+                                            <span class="order-chip">Don #@order.OrderId</span>
+                                            <span class="order-chip order-chip-soft">@order.TotalItems san pham</span>
+                                        </div>
+
+                                        <div class="order-history-total">@order.TotalAmount.ToString("N0") đ</div>
+                                    </div>
+
+                                    <div class="order-history-grid">
+                                        <div class="order-meta-item">
+                                            <span>Ngay dat</span>
+                                            <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                        </div>
+
+                                        <div class="order-meta-item">
+                                            <span>Nguoi nhan</span>
+                                            <strong>@order.ReceiverName</strong>
+                                            <small>@order.ReceiverPhone</small>
+                                        </div>
+
+                                        <div class="order-meta-item order-meta-item-wide">
+                                            <span>Dia chi giao hang</span>
+                                            <strong>@order.ShippingAddress</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="order-history-footer">
+                                        <div class="order-status-cluster">
+                                            <span class="order-status-pill @(order.IsCancelled ? "order-status-pill-danger" : null)">@order.Status</span>
+                                            <span class="order-status-pill order-status-pill-success">@order.PaymentStatus</span>
+                                            <span class="order-status-pill order-status-pill-momo">@order.PaymentMethod</span>
+                                        </div>
+
+                                        <div class="order-action-group">
+                                            @if (order.CanCancel)
+                                            {
+                                                <form asp-controller="Orders" asp-action="Cancel" method="post" class="d-inline-block">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@order.OrderId" />
+                                                    <button type="submit"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                            onclick="return confirm('Ban chac chan muon huy don #@order.OrderId?');">
+                                                        Huy don
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-dark btn-sm">
+                                                Xem chi tiet
+                                            </a>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="orders-section-empty">
+                        <i class="fas fa-wallet"></i>
+                        <h6 class="mb-2">Chua co don MoMo</h6>
+                        <p class="mb-0">Khi ban thanh toan qua MoMo, don se duoc tach rieng va hien thi trong khu nay.</p>
+                    </div>
+                }
+            </section>
         </section>
     }
 </div>

@@ -22,7 +22,12 @@ namespace Coffee.Controllers
         // GET: Categories
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categories.ToListAsync());
+            var categories = await _context.Categories
+                .Include(x => x.Products)
+                .OrderBy(x => x.CategoryName)
+                .ToListAsync();
+
+            return View(categories);
         }
 
         // GET: Categories/Details/5
@@ -34,6 +39,7 @@ namespace Coffee.Controllers
             }
 
             var category = await _context.Categories
+                .Include(x => x.Products)
                 .FirstOrDefaultAsync(m => m.CategoryId == id);
             if (category == null)
             {
@@ -60,6 +66,7 @@ namespace Coffee.Controllers
             {
                 _context.Add(category);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Da tao category moi thanh cong.";
                 return RedirectToAction(nameof(Index));
             }
             return View(category);
@@ -78,6 +85,7 @@ namespace Coffee.Controllers
             {
                 return NotFound();
             }
+
             return View(category);
         }
 
@@ -99,6 +107,7 @@ namespace Coffee.Controllers
                 {
                     _context.Update(category);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Da cap nhat category thanh cong.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -125,6 +134,7 @@ namespace Coffee.Controllers
             }
 
             var category = await _context.Categories
+                .Include(x => x.Products)
                 .FirstOrDefaultAsync(m => m.CategoryId == id);
             if (category == null)
             {
@@ -154,6 +164,7 @@ namespace Coffee.Controllers
             {
                 _context.Categories.Remove(category);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Da xoa category thanh cong.";
             }
 
             return RedirectToAction(nameof(Index));

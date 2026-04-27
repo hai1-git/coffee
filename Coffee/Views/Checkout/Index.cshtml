@@ -1,6 +1,7 @@
 @model Coffee.ViewModel.CheckoutViewModel
 @{
     Layout = "_ProductsCoffee";
+    var selectedPaymentMethod = (Model.PaymentMethod ?? string.Empty).ToUpperInvariant() == "MOMO" ? "MOMO" : "COD";
 }
 
 @section Styles {
@@ -82,28 +83,49 @@
 
         <div class="col-lg-4">
             <div class="checkout-summary-card">
-                <h4 class="mb-3">Thanh toan COD</h4>
+                <h4 class="mb-3" data-summary-heading>Thanh toan COD</h4>
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                <div class="checkout-payment-note p-3 mb-3">
-                    <div class="fw-bold text-dark mb-2">Thanh toan khi nhan hang</div>
-                    <div class="small text-muted">
-                        Shop se ship den dia chi ban vua nhap. Khi nhan duoc hang, ban moi thanh toan cho shipper.
-                    </div>
-                </div>
 
                 <form id="checkout-form" asp-action="Index" method="post">
                     @Html.AntiForgeryToken()
                     <input asp-for="SelectedItemsJson" type="hidden" />
-                    <input asp-for="PaymentMethod" type="hidden" value="COD" />
+
+                    <div class="checkout-method-group mb-3">
+                        <label class="checkout-method-card">
+                            <input type="radio" name="PaymentMethod" value="COD" @(selectedPaymentMethod == "COD" ? "checked" : null) />
+                            <span class="checkout-method-content">
+                                <strong>COD</strong>
+                                <small>Thanh toan khi nhan hang</small>
+                            </span>
+                        </label>
+
+                        <label class="checkout-method-card">
+                            <input type="radio" name="PaymentMethod" value="MOMO" @(selectedPaymentMethod == "MOMO" ? "checked" : null) />
+                            <span class="checkout-method-content">
+                                <strong>MoMo</strong>
+                                <small>Thanh toan online qua cong MoMo hoac QR du phong cua shop</small>
+                            </span>
+                        </label>
+                    </div>
 
                     <div class="d-flex justify-content-between mb-2">
                         <span>Tong tien</span>
                         <strong class="text-danger">@Model.Total.ToString("N0")</strong>
                     </div>
 
-                    <button type="submit" class="btn btn-danger w-100 mt-3">
+                    <div class="checkout-payment-note p-3 mb-2">
+                        <div class="fw-bold text-dark mb-2" data-payment-note-title>Thanh toan COD</div>
+                        <div class="small text-muted" data-payment-note-body>
+                            Don COD se duoc tao voi trang thai chua thanh toan. Khi admin duyet don, he thong se cap nhat sang da thanh toan.
+                        </div>
+                    </div>
+
+                    <div class="small text-danger mb-2" data-momo-hint hidden>
+                        Neu shop da dien du thong tin MoMo Business, he thong se chuyen ban sang cong thanh toan MoMo. Neu chua, trang huong dan chuyen khoan QR du phong se duoc mo.
+                    </div>
+
+                    <button type="submit" class="btn btn-danger w-100 mt-3" data-submit-order>
                         Dat hang COD
                     </button>
                 </form>
@@ -114,4 +136,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/Checkout/checkout.js" asp-append-version="true"></script>
 }

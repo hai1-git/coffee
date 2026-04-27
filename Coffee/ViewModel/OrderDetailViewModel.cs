@@ -1,3 +1,5 @@
+using Coffee.Helper;
+
 namespace Coffee.ViewModel
 {
     public class OrderDetailViewModel
@@ -23,5 +25,20 @@ namespace Coffee.ViewModel
         public decimal TotalAmount { get; set; }
 
         public List<OrderDetailItemViewModel> Items { get; set; } = new();
+
+        public bool IsMomoPayment =>
+            string.Equals(PaymentMethod, "MoMo", StringComparison.OrdinalIgnoreCase);
+
+        public bool IsMomoPaid =>
+            OrderStatusHelper.IsPaid(PaymentStatus);
+
+        public bool CanCancel =>
+            OrderStatusHelper.CanCustomerCancelOrder(Status, PaymentStatus);
+
+        public bool IsCancelled =>
+            OrderStatusHelper.IsCancelled(Status);
+
+        public string CustomerCancellationMessage =>
+            OrderStatusHelper.GetCustomerCancellationMessage(Status, PaymentStatus);
     }
 }

@@ -1,19 +1,34 @@
 (function ($) {
     "use strict";
     
-    // Dropdown on mouse hover
+    // Desktop hover dropdown without the flicker caused by click toggling.
     $(document).ready(function () {
         function toggleNavbarMethod() {
+            var $dropdowns = $('.navbar .dropdown');
+
+            $dropdowns.off('.coffeeHover');
+
             if ($(window).width() > 992) {
-                $('.navbar .dropdown').on('mouseover', function () {
-                    $('.dropdown-toggle', this).trigger('click');
-                }).on('mouseout', function () {
-                    $('.dropdown-toggle', this).trigger('click').blur();
+                $dropdowns.on('mouseenter.coffeeHover', function () {
+                    var $dropdown = $(this);
+
+                    $dropdown.addClass('show');
+                    $dropdown.find('.dropdown-toggle').attr('aria-expanded', 'true');
+                    $dropdown.find('.dropdown-menu').addClass('show');
+                }).on('mouseleave.coffeeHover', function () {
+                    var $dropdown = $(this);
+
+                    $dropdown.removeClass('show');
+                    $dropdown.find('.dropdown-toggle').attr('aria-expanded', 'false');
+                    $dropdown.find('.dropdown-menu').removeClass('show');
                 });
             } else {
-                $('.navbar .dropdown').off('mouseover').off('mouseout');
+                $dropdowns.removeClass('show');
+                $dropdowns.find('.dropdown-menu').removeClass('show');
+                $dropdowns.find('.dropdown-toggle').attr('aria-expanded', 'false');
             }
         }
+
         toggleNavbarMethod();
         $(window).resize(toggleNavbarMethod);
     });
@@ -65,6 +80,13 @@
             }
         }
     });
+
+    function syncCoffeeHeader() {
+        $('.coffee-topbar').toggleClass('coffee-topbar-scrolled', $(window).scrollTop() > 24);
+    }
+
+    syncCoffeeHeader();
+    $(window).on('scroll', syncCoffeeHeader);
     
 })(jQuery);
 

@@ -9,9 +9,22 @@
     <link rel="stylesheet" href="~/css/Orders/orders.css" />
 }
 
-@await Html.PartialAsync("~/Views/Products/_Header.cshtml")
-
 <div class="orders-page container py-4 py-lg-5">
+    @if (TempData["OrderSuccess"] != null)
+    {
+        <div class="alert alert-success mb-4">@TempData["OrderSuccess"]</div>
+    }
+
+    @if (TempData["OrderError"] != null)
+    {
+        <div class="alert alert-danger mb-4">@TempData["OrderError"]</div>
+    }
+
+    @if (TempData["MomoSuccess"] != null)
+    {
+        <div class="alert alert-success mb-4">@TempData["MomoSuccess"]</div>
+    }
+
     <div class="orders-hero">
         <div>
             <div class="orders-eyebrow">Chi tiet don hang</div>
@@ -82,8 +95,45 @@
                     <strong>@Model.TotalAmount.ToString("N0") đ</strong>
                 </div>
 
+                @if (Model.CanCancel)
+                {
+                    <form asp-controller="Orders" asp-action="Cancel" method="post" class="mt-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <input type="hidden" name="redirectToDetails" value="true" />
+                        <button type="submit"
+                                class="btn btn-outline-danger btn-block"
+                                onclick="return confirm('Ban chac chan muon huy don #@Model.OrderId?');">
+                            Huy don nay
+                        </button>
+                    </form>
+                }
+
                 <div class="small text-muted mt-3">
-                    Don COD se duoc giao truoc, ban thanh toan cho shipper khi nhan hang.
+                    @if (!string.IsNullOrWhiteSpace(Model.CustomerCancellationMessage))
+                    {
+                        <div class="mb-2">@Model.CustomerCancellationMessage</div>
+                    }
+
+                    @if (Model.IsCancelled)
+                    {
+                        <text>Don nay da duoc huy. He thong van giu lai lich su de ban doi chieu khi can.</text>
+                    }
+                    else if (Model.IsMomoPayment)
+                    {
+                        @if (Model.IsMomoPaid)
+                        {
+                            <text>Don MoMo nay da duoc he thong ghi nhan thanh toan. Shop se tiep tuc xu ly giao hang cho ban.</text>
+                        }
+                        else
+                        {
+                            <text>Don MoMo nay dang o trang thai chua thanh toan. Sau khi ban xac nhan chuyen tien hoac MoMo tra ket qua thanh cong, he thong se cap nhat sang da thanh toan.</text>
+                        }
+                    }
+                    else
+                    {
+                        <text>Don COD bat dau o trang thai chua thanh toan. Khi admin duyet don, he thong se cap nhat sang da thanh toan.</text>
+                    }
                 </div>
             </aside>
         </div>
@@ -96,7 +146,7 @@
                         <p class="mb-0 text-muted">Danh sach duoc gioi han chieu cao de don nhieu mon van gon mat.</p>
                     </div>
 
-                    <span class="order-status-pill">@Model.Status</span>
+                    <span class="order-status-pill @(Model.IsCancelled ? "order-status-pill-danger" : null)">@Model.Status</span>
                 </div>
 
                 <div class="order-items-scroll">

@@ -1,11 +1,14 @@
 using Coffee.Data;
 using Coffee.DTO;
+using Coffee.Helper;
 using Coffee.Models;
+using Coffee.Services;
 using Coffee.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
+using Microsoft.Extensions.Options;
+using System.Text;
 using System.Text.Json;
 
 namespace Coffee.Controllers
@@ -14,12 +17,26 @@ namespace Coffee.Controllers
     public class CheckoutController : Controller
     {
         private const string CashOnDelivery = "COD";
+        private const string Momo = "MOMO";
 
         private readonly CoffeeShopDbContext db;
+        private readonly MomoPaymentSettings momoSettings;
+        private readonly MomoBusinessSettings momoBusinessSettings;
+        private readonly MomoBusinessService momoBusinessService;
+        private readonly IWebHostEnvironment environment;
 
-        public CheckoutController(CoffeeShopDbContext context)
+        public CheckoutController(
+            CoffeeShopDbContext context,
+            IOptions<MomoPaymentSettings> momoOptions,
+            IOptions<MomoBusinessSettings> momoBusinessOptions,
+            MomoBusinessService momoBusinessService,
+            IWebHostEnvironment environment)
         {
             db = context;
+            momoSettings = momoOptions.Value;
+            momoBusinessSettings = momoBusinessOptions.Value;
+            this.momoBusinessService = momoBusinessService;
+            this.environment = environment;
         }
 
         private int GetUserId()
@@ -87,7 +104,7 @@ namespace Coffee.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Index(CheckoutViewModel model)
+        public async Task<IActionResult> Index(CheckoutViewModel model, CancellationToken cancellationToken)
         {
             var checkoutModel = BuildCheckoutViewModel(model.SelectedItemsJson);
 
@@ -97,7 +114,7 @@ namespace Coffee.Controllers
                 return RedirectToAction("Index", "Cart");
             }
 
-            checkoutModel.PaymentMethod = CashOnDelivery;
+            checkoutModel.PaymentMethod = NormalizePaymentMethod(model.PaymentMethod);
             checkoutModel.ReceiverName = (model.ReceiverName ?? string.Empty).Trim();
             checkoutModel.ReceiverPhone = (model.ReceiverPhone ?? string.Empty).Trim();
             checkoutModel.ShippingAddress = (model.ShippingAddress ?? string.Empty).Trim();
@@ -114,14 +131,17 @@ namespace Coffee.Controllers
                 return View(checkoutModel);
             }
 
-            using var transaction = db.Database.BeginTransaction();
+            var useMomoBusiness = checkoutModel.PaymentMethod == Momo && momoBusinessService.IsConfigured;
+
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            MomoBusinessService.MomoCreatePaymentResult? momoCreateResult = null;
 
             try
             {
                 var user = GetCurrentUser();
                 if (user == null)
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync(cancellationToken);
                     return RedirectToAction("Login", "Auth");
                 }
 
@@ -135,12 +155,12 @@ namespace Coffee.Controllers
                     ReceiverPhone = checkoutModel.ReceiverPhone,
                     ShippingAddress = checkoutModel.ShippingAddress,
                     TotalAmount = checkoutModel.Total,
-                    Status = "Cho xac nhan",
+                    Status = OrderStatusHelper.UnpaidStatus,
                     OrderDate = DateTime.UtcNow
                 };
 
                 db.Orders.Add(order);
-                db.SaveChanges();
+                await db.SaveChangesAsync(cancellationToken);
 
                 var orderDetails = checkoutModel.Items.Select(item => new OrderDetail
                 {
@@ -152,28 +172,455 @@ namespace Coffee.Controllers
 
                 db.OrderDetails.AddRange(orderDetails);
 
-                db.Payments.Add(new Payment
+                var payment = new Payment
                 {
                     OrderId = order.OrderId,
-                    PaymentMethod = CashOnDelivery,
-                    PaymentStatus = "Thanh toan khi nhan hang",
-                    TransactionId = Guid.NewGuid().ToString("N").ToUpperInvariant()
-                });
+                    PaymentMethod = checkoutModel.PaymentMethod == Momo ? OrderStatusHelper.MomoPaymentMethod : CashOnDelivery,
+                    PaymentStatus = OrderStatusHelper.UnpaidStatus,
+                    TransactionId = checkoutModel.PaymentMethod == Momo
+                        ? BuildMomoReference(order.OrderId)
+                        : Guid.NewGuid().ToString("N").ToUpperInvariant()
+                };
 
-                db.SaveChanges();
-                transaction.Commit();
+                db.Payments.Add(payment);
+                await db.SaveChangesAsync(cancellationToken);
+
+                if (useMomoBusiness)
+                {
+                    momoCreateResult = await StartMomoBusinessPaymentAsync(order, payment, checkoutModel, user, cancellationToken);
+                    if (!momoCreateResult.IsSuccess)
+                    {
+                        await transaction.RollbackAsync(cancellationToken);
+                        ModelState.AddModelError(string.Empty, BuildMomoErrorMessage(momoCreateResult));
+                        return View(checkoutModel);
+                    }
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+
+                if (useMomoBusiness)
+                {
+                    return Redirect(momoCreateResult!.PayUrl);
+                }
+
+                if (checkoutModel.PaymentMethod == Momo)
+                {
+                    return RedirectToAction(nameof(MomoPayment), new { id = order.OrderId });
+                }
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync(cancellationToken);
                 Console.WriteLine("ERROR CHECKOUT: " + ex.Message);
                 Console.WriteLine(ex.StackTrace);
                 ModelState.AddModelError(string.Empty, "Khong the xu ly thanh toan luc nay. Vui long thu lai.");
                 return View(checkoutModel);
             }
 
-            TempData["CheckoutSuccess"] = "Dat hang COD thanh cong. Shop se giao den nha va ban thanh toan khi nhan hang.";
+            TempData["CheckoutSuccess"] = "Dat hang COD thanh cong. Don hang dang o trang thai chua thanh toan va se duoc cap nhat sang da thanh toan khi admin duyet.";
             return RedirectToAction("Index", "Cart");
+        }
+
+        [HttpGet]
+        public IActionResult MomoPayment(int id)
+        {
+            var userId = GetUserId();
+            if (userId <= 0)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var order = db.Orders
+                .AsNoTracking()
+                .Include(x => x.Payments)
+                .FirstOrDefault(x => x.OrderId == id && x.UserId == userId);
+
+            if (order == null)
+            {
+                return RedirectToAction("Index", "Orders");
+            }
+
+            var payment = order.Payments.FirstOrDefault();
+            if (payment == null || !string.Equals(payment.PaymentMethod, "MoMo", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction("Details", "Orders", new { id });
+            }
+
+            return View("Momo", BuildMomoCheckoutViewModel(order, payment));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ConfirmMomo(int id)
+        {
+            var userId = GetUserId();
+            if (userId <= 0)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var order = db.Orders
+                .Include(x => x.Payments)
+                .FirstOrDefault(x => x.OrderId == id && x.UserId == userId);
+
+            if (order == null)
+            {
+                return RedirectToAction("Index", "Orders");
+            }
+
+            var payment = order.Payments.FirstOrDefault();
+            if (payment == null || !OrderStatusHelper.IsMomoPaymentMethod(payment.PaymentMethod))
+            {
+                return RedirectToAction("Details", "Orders", new { id });
+            }
+
+            if (OrderStatusHelper.IsCancelled(order.Status) || OrderStatusHelper.IsCancelled(payment.PaymentStatus))
+            {
+                TempData["OrderError"] = "Don nay da huy, khong the cap nhat thanh toan MoMo nua.";
+                return RedirectToAction("Details", "Orders", new { id });
+            }
+
+            if (!OrderStatusHelper.IsPaid(payment.PaymentStatus))
+            {
+                payment.PaymentStatus = OrderStatusHelper.PaidStatus;
+                order.Status = OrderStatusHelper.PaidStatus;
+                db.SaveChanges();
+            }
+
+            TempData["MomoSuccess"] = "Da cap nhat don MoMo sang da thanh toan.";
+            return RedirectToAction("Details", "Orders", new { id });
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> MomoReturn([FromQuery] MomoBusinessService.MomoPaymentCallbackPayload payload, CancellationToken cancellationToken)
+        {
+            var result = await ProcessMomoCallbackAsync(payload, cancellationToken);
+            return View("MomoResult", result.ViewModel);
+        }
+
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        [HttpPost]
+        public async Task<IActionResult> MomoIpn([FromBody] MomoBusinessService.MomoPaymentCallbackPayload payload, CancellationToken cancellationToken)
+        {
+            var result = await ProcessMomoCallbackAsync(payload, cancellationToken);
+
+            if (!result.IsSignatureValid)
+            {
+                return BadRequest(new { message = result.ViewModel.Message });
+            }
+
+            return Ok(new { message = "Received" });
+        }
+
+        private async Task<MomoBusinessService.MomoCreatePaymentResult> StartMomoBusinessPaymentAsync(
+            Order order,
+            Payment payment,
+            CheckoutViewModel checkoutModel,
+            User user,
+            CancellationToken cancellationToken)
+        {
+            var request = new MomoBusinessService.MomoCreatePaymentRequest
+            {
+                RequestId = BuildMomoRequestId(order.OrderId),
+                Amount = ConvertToMomoAmount(order.TotalAmount ?? 0),
+                OrderId = payment.TransactionId ?? BuildMomoReference(order.OrderId),
+                OrderInfo = BuildMomoOrderInfo(order.OrderId),
+                RedirectUrl = BuildMomoCallbackUrl(nameof(MomoReturn)),
+                IpnUrl = BuildMomoCallbackUrl(nameof(MomoIpn)),
+                ExtraData = BuildMomoExtraData(order.OrderId),
+                UserInfo = BuildMomoUserInfo(order, user),
+                Items = BuildMomoItems(checkoutModel.Items)
+            };
+
+            return await momoBusinessService.CreatePaymentAsync(request, cancellationToken);
+        }
+
+        private async Task<MomoCallbackProcessResult> ProcessMomoCallbackAsync(
+            MomoBusinessService.MomoPaymentCallbackPayload payload,
+            CancellationToken cancellationToken)
+        {
+            var viewModel = new MomoReturnViewModel
+            {
+                Amount = payload.Amount,
+                PartnerOrderId = payload.OrderId ?? string.Empty,
+                MomoTransactionId = payload.TransId
+            };
+
+            if (!momoBusinessService.TryValidatePaymentCallback(payload, out var validationError))
+            {
+                viewModel.Title = "Khong xac thuc duoc ket qua thanh toan";
+                viewModel.Message = validationError;
+                viewModel.PaymentStatus = OrderStatusHelper.UnpaidStatus;
+                viewModel.OrderStatus = OrderStatusHelper.UnpaidStatus;
+
+                return new MomoCallbackProcessResult
+                {
+                    IsSignatureValid = false,
+                    ViewModel = viewModel
+                };
+            }
+
+            if (!TryResolveInternalOrderId(payload, out var internalOrderId))
+            {
+                viewModel.Title = "Khong tim thay don hang";
+                viewModel.Message = "MoMo da tra ve ket qua nhung he thong khong xac dinh duoc don hang can cap nhat.";
+                viewModel.PaymentStatus = OrderStatusHelper.UnpaidStatus;
+                viewModel.OrderStatus = OrderStatusHelper.UnpaidStatus;
+
+                return new MomoCallbackProcessResult
+                {
+                    IsSignatureValid = true,
+                    ViewModel = viewModel
+                };
+            }
+
+            viewModel.OrderId = internalOrderId;
+
+            var order = await db.Orders
+                .Include(x => x.Payments)
+                .FirstOrDefaultAsync(x => x.OrderId == internalOrderId, cancellationToken);
+
+            if (order == null)
+            {
+                viewModel.Title = "Khong tim thay don hang";
+                viewModel.Message = "He thong da xac thuc callback MoMo nhung chua tim thay don hang tuong ung.";
+                viewModel.PaymentStatus = OrderStatusHelper.UnpaidStatus;
+                viewModel.OrderStatus = OrderStatusHelper.UnpaidStatus;
+
+                return new MomoCallbackProcessResult
+                {
+                    IsSignatureValid = true,
+                    ViewModel = viewModel
+                };
+            }
+
+            var payment = order.Payments.FirstOrDefault(x =>
+                string.Equals(x.PaymentMethod, "MoMo", StringComparison.OrdinalIgnoreCase));
+
+            if (payment == null)
+            {
+                viewModel.Title = "Khong tim thay thong tin thanh toan";
+                viewModel.Message = "Don hang ton tai nhung khong co ban ghi thanh toan MoMo de cap nhat.";
+                viewModel.PaymentStatus = OrderStatusHelper.UnpaidStatus;
+                viewModel.OrderStatus = OrderStatusHelper.NormalizeOrderStatus(order.Status);
+
+                return new MomoCallbackProcessResult
+                {
+                    IsSignatureValid = true,
+                    ViewModel = viewModel
+                };
+            }
+
+            ApplyMomoPaymentResult(order, payment, payload);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return new MomoCallbackProcessResult
+            {
+                IsSignatureValid = true,
+                ViewModel = BuildMomoReturnViewModel(order, payment, payload)
+            };
+        }
+
+        private static void ApplyMomoPaymentResult(Order order, Payment payment, MomoBusinessService.MomoPaymentCallbackPayload payload)
+        {
+            payment.TransactionId = BuildDisplayedMomoTransactionId(payload.OrderId, payload.TransId);
+
+            if (OrderStatusHelper.IsCancelled(order.Status))
+            {
+                payment.PaymentStatus = OrderStatusHelper.CancelledStatus;
+                return;
+            }
+
+            if (payload.ResultCode == 0)
+            {
+                order.Status = OrderStatusHelper.PaidStatus;
+                payment.PaymentStatus = OrderStatusHelper.PaidStatus;
+                return;
+            }
+
+            if (OrderStatusHelper.IsPaid(payment.PaymentStatus))
+            {
+                return;
+            }
+
+            order.Status = OrderStatusHelper.UnpaidStatus;
+            payment.PaymentStatus = OrderStatusHelper.UnpaidStatus;
+        }
+
+        private static string BuildDisplayedMomoTransactionId(string? partnerOrderId, long momoTransactionId)
+        {
+            return momoTransactionId > 0
+                ? $"{partnerOrderId} / MoMo {momoTransactionId}"
+                : partnerOrderId ?? string.Empty;
+        }
+
+        private MomoReturnViewModel BuildMomoReturnViewModel(
+            Order order,
+            Payment payment,
+            MomoBusinessService.MomoPaymentCallbackPayload payload)
+        {
+            var normalizedPaymentStatus = OrderStatusHelper.NormalizePaymentStatus(payment.PaymentStatus, order.Status);
+            var normalizedOrderStatus = OrderStatusHelper.NormalizeOrderStatus(order.Status, payment.PaymentStatus);
+            var isSuccess = OrderStatusHelper.IsPaid(normalizedPaymentStatus);
+
+            return new MomoReturnViewModel
+            {
+                OrderId = order.OrderId,
+                IsSuccess = isSuccess,
+                Title = isSuccess ? "Thanh toan MoMo thanh cong" : "Thanh toan MoMo chua hoan tat",
+                Message = isSuccess
+                    ? "MoMo da xac nhan giao dich. Shop se tiep tuc xu ly don hang cua ban."
+                    : string.IsNullOrWhiteSpace(payload.Message)
+                        ? "Giao dich MoMo chua thanh cong. Don hang van duoc giu o trang thai chua thanh toan."
+                        : payload.Message,
+                PaymentStatus = normalizedPaymentStatus,
+                OrderStatus = normalizedOrderStatus,
+                PartnerOrderId = payload.OrderId ?? string.Empty,
+                Amount = payload.Amount,
+                MomoTransactionId = payload.TransId
+            };
+        }
+
+        private string BuildMomoCallbackUrl(string actionName)
+        {
+            var relativeUrl = Url.Action(actionName, "Checkout") ?? $"/Checkout/{actionName}";
+
+            if (Uri.TryCreate(relativeUrl, UriKind.Absolute, out var absoluteUrl))
+            {
+                return absoluteUrl.ToString();
+            }
+
+            var baseUrl = string.IsNullOrWhiteSpace(momoBusinessSettings.PublicBaseUrl)
+                ? $"{Request.Scheme}://{Request.Host}"
+                : momoBusinessSettings.PublicBaseUrl.TrimEnd('/');
+
+            return $"{baseUrl}{relativeUrl}";
+        }
+
+        private string BuildMomoOrderInfo(int orderId)
+        {
+            var prefix = string.IsNullOrWhiteSpace(momoBusinessSettings.OrderInfoPrefix)
+                ? "Thanh toan don hang Coffee"
+                : momoBusinessSettings.OrderInfoPrefix.Trim();
+
+            return $"{prefix} #{orderId}";
+        }
+
+        private static string BuildMomoRequestId(int orderId)
+        {
+            return $"REQ{orderId}{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        }
+
+        private static string BuildMomoExtraData(int orderId)
+        {
+            var json = JsonSerializer.Serialize(new MomoExtraData
+            {
+                InternalOrderId = orderId
+            });
+
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+        }
+
+        private static bool TryResolveInternalOrderId(MomoBusinessService.MomoPaymentCallbackPayload payload, out int orderId)
+        {
+            if (TryParseOrderIdFromReference(payload.OrderId, out orderId))
+            {
+                return true;
+            }
+
+            orderId = 0;
+
+            if (string.IsNullOrWhiteSpace(payload.ExtraData))
+            {
+                return false;
+            }
+
+            try
+            {
+                var rawBytes = Convert.FromBase64String(payload.ExtraData);
+                var rawJson = Encoding.UTF8.GetString(rawBytes);
+                var extraData = JsonSerializer.Deserialize<MomoExtraData>(rawJson);
+
+                if (extraData?.InternalOrderId > 0)
+                {
+                    orderId = extraData.InternalOrderId;
+                    return true;
+                }
+            }
+            catch
+            {
+                orderId = 0;
+            }
+
+            return false;
+        }
+
+        private static bool TryParseOrderIdFromReference(string? reference, out int orderId)
+        {
+            orderId = 0;
+
+            if (string.IsNullOrWhiteSpace(reference) ||
+                !reference.StartsWith("CFF", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var digits = new string(reference.Skip(3).TakeWhile(char.IsDigit).ToArray());
+            return !string.IsNullOrWhiteSpace(digits) && int.TryParse(digits, out orderId);
+        }
+
+        private static long ConvertToMomoAmount(decimal amount)
+        {
+            return Convert.ToInt64(decimal.Round(amount, 0, MidpointRounding.AwayFromZero));
+        }
+
+        private static List<MomoBusinessService.MomoItemInfo>? BuildMomoItems(IEnumerable<CartItemViewModel> items)
+        {
+            var momoItems = items
+                .Select(item => new MomoBusinessService.MomoItemInfo
+                {
+                    Id = item.ProductId.ToString(),
+                    Name = item.ProductName,
+                    Price = ConvertToMomoAmount(item.Price),
+                    Quantity = item.Quantity,
+                    TotalPrice = ConvertToMomoAmount(item.SubTotal)
+                })
+                .ToList();
+
+            return momoItems.Any() ? momoItems : null;
+        }
+
+        private static MomoBusinessService.MomoUserInfo? BuildMomoUserInfo(Order order, User user)
+        {
+            var userInfo = new MomoBusinessService.MomoUserInfo
+            {
+                Name = order.ReceiverName ?? string.Empty,
+                PhoneNumber = order.ReceiverPhone ?? string.Empty,
+                Email = user.Email ?? string.Empty
+            };
+
+            return string.IsNullOrWhiteSpace(userInfo.Name) &&
+                   string.IsNullOrWhiteSpace(userInfo.PhoneNumber) &&
+                   string.IsNullOrWhiteSpace(userInfo.Email)
+                ? null
+                : userInfo;
+        }
+
+        private static string BuildMomoErrorMessage(MomoBusinessService.MomoCreatePaymentResult result)
+        {
+            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+            {
+                return result.ErrorMessage;
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.Message))
+            {
+                return result.Message;
+            }
+
+            return "Khong the khoi tao thanh toan MoMo luc nay. Vui long thu lai sau.";
         }
 
         private CheckoutViewModel? BuildCheckoutViewModel(string? items)
@@ -250,6 +697,37 @@ namespace Coffee.Controllers
             };
         }
 
+        private MomoCheckoutViewModel BuildMomoCheckoutViewModel(Order order, Payment payment)
+        {
+            return new MomoCheckoutViewModel
+            {
+                OrderId = order.OrderId,
+                TotalAmount = order.TotalAmount ?? 0,
+                ReceiverName = order.ReceiverName ?? string.Empty,
+                PhoneNumber = momoSettings.PhoneNumber,
+                DisplayName = momoSettings.DisplayName,
+                PaymentReference = payment.TransactionId ?? BuildMomoReference(order.OrderId),
+                PaymentStatus = OrderStatusHelper.NormalizePaymentStatus(payment.PaymentStatus, order.Status),
+                OrderStatus = OrderStatusHelper.NormalizeOrderStatus(order.Status, payment.PaymentStatus),
+                QrImagePath = momoSettings.QrImagePath,
+                HasQrImage = HasQrImage(momoSettings.QrImagePath),
+                ReceiveLink = momoSettings.ReceiveLink,
+                IsBusinessReady = momoBusinessService.IsConfigured
+            };
+        }
+
+        private bool HasQrImage(string qrImagePath)
+        {
+            if (string.IsNullOrWhiteSpace(qrImagePath))
+            {
+                return false;
+            }
+
+            var normalizedPath = qrImagePath.TrimStart('~', '/').Replace('/', Path.DirectorySeparatorChar);
+            var physicalPath = Path.Combine(environment.WebRootPath, normalizedPath);
+            return System.IO.File.Exists(physicalPath);
+        }
+
         private static List<CartItemDTO> ParseSelectedItems(string? items)
         {
             if (string.IsNullOrWhiteSpace(items))
@@ -287,5 +765,28 @@ namespace Coffee.Controllers
                 .ToList();
         }
 
+        private static string NormalizePaymentMethod(string? paymentMethod)
+        {
+            return string.Equals(paymentMethod, Momo, StringComparison.OrdinalIgnoreCase)
+                ? Momo
+                : CashOnDelivery;
+        }
+
+        private static string BuildMomoReference(int orderId)
+        {
+            return $"CFF{orderId:D6}";
+        }
+
+        private sealed class MomoCallbackProcessResult
+        {
+            public bool IsSignatureValid { get; init; }
+
+            public MomoReturnViewModel ViewModel { get; init; } = new();
+        }
+
+        private sealed class MomoExtraData
+        {
+            public int InternalOrderId { get; set; }
+        }
     }
 }

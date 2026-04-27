@@ -1,4 +1,5 @@
 ﻿using Coffee.Data;
+using Coffee.Helper;
 using Coffee.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,9 @@ namespace Coffee.Controllers
     [Authorize]
     public class OrdersController : Controller
     {
+        private const string DefaultPaymentMethod = OrderStatusHelper.CodPaymentMethod;
+        private const string DefaultPaymentStatus = OrderStatusHelper.UnpaidStatus;
+
         private readonly CoffeeShopDbContext db;
 
         public OrdersController(CoffeeShopDbContext context)
@@ -57,15 +61,15 @@ namespace Coffee.Controllers
                         ? order.ShippingAddress
                         : order.User != null ? order.User.Address ?? "" : "",
 
-                    Status = order.Status ?? "Cho xac nhan",
+                    Status = order.Status ?? OrderStatusHelper.UnpaidStatus,
 
                     PaymentMethod = order.Payments != null && order.Payments.Any()
-                        ? order.Payments.Select(p => p.PaymentMethod).FirstOrDefault() ?? "COD"
-                        : "COD",
+                        ? order.Payments.Select(p => p.PaymentMethod).FirstOrDefault() ?? DefaultPaymentMethod
+                        : DefaultPaymentMethod,
 
                     PaymentStatus = order.Payments != null && order.Payments.Any()
-                        ? order.Payments.Select(p => p.PaymentStatus).FirstOrDefault() ?? "Chua thanh toan"
-                        : "Chua thanh toan",
+                        ? order.Payments.Select(p => p.PaymentStatus).FirstOrDefault() ?? DefaultPaymentStatus
+                        : DefaultPaymentStatus,
 
                     TotalAmount = order.TotalAmount ?? 0,
 
@@ -117,15 +121,15 @@ namespace Coffee.Controllers
                         ? order.ShippingAddress
                         : order.User != null ? order.User.Address ?? "" : "",
 
-                    Status = order.Status ?? "Cho xac nhan",
+                    Status = order.Status ?? OrderStatusHelper.UnpaidStatus,
 
                     PaymentMethod = order.Payments != null && order.Payments.Any()
-                        ? order.Payments.Select(p => p.PaymentMethod).FirstOrDefault() ?? "COD"
-                        : "COD",
+                        ? order.Payments.Select(p => p.PaymentMethod).FirstOrDefault() ?? DefaultPaymentMethod
+                        : DefaultPaymentMethod,
 
                     PaymentStatus = order.Payments != null && order.Payments.Any()
-                        ? order.Payments.Select(p => p.PaymentStatus).FirstOrDefault() ?? "Chua thanh toan"
-                        : "Chua thanh toan",
+                        ? order.Payments.Select(p => p.PaymentStatus).FirstOrDefault() ?? DefaultPaymentStatus
+                        : DefaultPaymentStatus,
 
                     TransactionId = order.Payments != null && order.Payments.Any()
                         ? order.Payments.Select(p => p.TransactionId).FirstOrDefault() ?? ""
@@ -153,6 +157,63 @@ namespace Coffee.Controllers
             }
 
             return View(order);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Cancel(int id, bool redirectToDetails = false)
+        {
+            var userId = GetUserId();
+            if (userId <= 0)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var order = db.Orders
+                .Include(x => x.Payments)
+                .FirstOrDefault(x => x.OrderId == id && x.UserId == userId);
+
+            if (order == null)
+            {
+                TempData["OrderError"] = $"Khong tim thay don #{id} de huy.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var paymentMethod = order.Payments
+                .OrderBy(x => x.PaymentId)
+                .Select(x => x.PaymentMethod)
+                .FirstOrDefault() ?? DefaultPaymentMethod;
+
+            var paymentStatus = order.Payments
+                .OrderBy(x => x.PaymentId)
+                .Select(x => x.PaymentStatus)
+                .FirstOrDefault() ?? DefaultPaymentStatus;
+
+            if (!OrderStatusHelper.CanCustomerCancelOrder(order.Status, paymentStatus))
+            {
+                TempData["OrderError"] = OrderStatusHelper.GetCustomerCancellationMessage(
+                    order.Status,
+                    paymentStatus);
+
+                return redirectToDetails
+                    ? RedirectToAction(nameof(Details), new { id })
+                    : RedirectToAction(nameof(Index));
+            }
+
+            order.Status = OrderStatusHelper.CancelledStatus;
+
+            foreach (var payment in order.Payments)
+            {
+                payment.PaymentStatus = OrderStatusHelper.CancelledStatus;
+            }
+
+            db.SaveChanges();
+
+            TempData["OrderSuccess"] = $"Da huy don #{id} thanh cong.";
+
+            return redirectToDetails
+                ? RedirectToAction(nameof(Details), new { id })
+                : RedirectToAction(nameof(Index));
         }
     }
 }

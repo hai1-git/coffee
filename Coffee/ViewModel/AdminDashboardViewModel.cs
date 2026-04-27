@@ -16,6 +16,10 @@ namespace Coffee.ViewModel
 
         public int PendingOrders { get; set; }
 
+        public int PendingCodOrders { get; set; }
+
+        public int PaidMomoOrders { get; set; }
+
         public List<AdminChartItemViewModel> ProductsByCategory { get; set; } = new();
 
         public List<AdminMonthlyStatViewModel> MonthlyStats { get; set; } = new();
@@ -25,6 +29,8 @@ namespace Coffee.ViewModel
         public List<AdminTopProductViewModel> TopProducts { get; set; } = new();
 
         public List<AdminRecentOrderViewModel> RecentOrders { get; set; } = new();
+
+        public List<AdminPendingCodOrderViewModel> PendingCodOrderList { get; set; } = new();
     }
 
     public class AdminChartItemViewModel
@@ -59,6 +65,25 @@ namespace Coffee.ViewModel
         public string CustomerName { get; set; } = string.Empty;
 
         public string Status { get; set; } = string.Empty;
+
+        public decimal TotalAmount { get; set; }
+
+        public DateTime OrderDate { get; set; }
+    }
+
+    public class AdminPendingCodOrderViewModel
+    {
+        public int OrderId { get; set; }
+
+        public string CustomerName { get; set; } = string.Empty;
+
+        public string ReceiverPhone { get; set; } = string.Empty;
+
+        public string ShippingAddress { get; set; } = string.Empty;
+
+        public string Status { get; set; } = string.Empty;
+
+        public string PaymentStatus { get; set; } = string.Empty;
 
         public decimal TotalAmount { get; set; }
 

@@ -1,115 +1,185 @@
-﻿@model Coffee.Models.Product
+@model Coffee.Models.Product
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Cap nhat product";
     Layout = "_ProductsCoffee";
+
+    var imageUrl = string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/img/default.png" : Model.ImageUrl;
+    var productName = string.IsNullOrWhiteSpace(Model.ProductName) ? "San pham chua dat ten" : Model.ProductName.Trim();
 }
 
-<h2 class="mb-4">✏️ Sửa sản phẩm</h2>
+@section Styles {
+    <link rel="stylesheet" href="~/css/Admin/admin-category.css" />
+    <link rel="stylesheet" href="~/css/Admin/admin-product.css" />
+}
 
-<div class="row">
-    <div class="col-md-6">
+<div class="admin-product-shell container py-4 py-lg-5">
+    <section class="admin-product-hero admin-product-hero-compact">
+        <div>
+            <span class="admin-product-eyebrow">Edit product</span>
+            <h1>Cap nhat san pham</h1>
+            <p>Chinh thong tin, doi anh, doi gia hoac cap nhat category de product hien thi dep va chinh xac hon tren toan he thong.</p>
+        </div>
 
-        <form asp-action="Edit" enctype="multipart/form-data" class="card p-4 shadow">
+        <div class="admin-product-hero-actions">
+            <a asp-controller="Admin" asp-action="Index" class="admin-ghost-button">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a asp-action="Index" class="admin-secondary-button">
+                <i class="fas fa-list"></i>
+                <span>Ve danh sach</span>
+            </a>
+        </div>
+    </section>
 
-            <input type="hidden" asp-for="ProductId" />
-
-            <!-- HIỂN THỊ LỖI -->
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <!-- TÊN -->
-            <div class="mb-3">
-                <label asp-for="ProductName" class="form-label"></label>
-                <input asp-for="ProductName" class="form-control" />
-                <span asp-validation-for="ProductName" class="text-danger"></span>
+    <section class="admin-product-form-layout">
+        <article class="admin-product-form-card">
+            <div class="admin-product-form-head">
+                <div>
+                    <span class="admin-product-eyebrow">Product update</span>
+                    <h2>Thong tin can chinh sua</h2>
+                    <p>Ban co the sua ten, gia, mo ta va thay anh moi. Anh xem truoc se cap nhat ngay de ban doi chieu nhanh.</p>
+                </div>
             </div>
 
-            <!-- GIÁ -->
-            <div class="mb-3">
-                <label asp-for="Price" class="form-label"></label>
-                <input asp-for="Price"
-                       class="form-control"
-                       type="number"
-                       min="0"
-                       step="0.01" />
-                <span asp-validation-for="Price" class="text-danger"></span>
+            <form asp-action="Edit" enctype="multipart/form-data" class="admin-product-form">
+                <input type="hidden" asp-for="ProductId" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger admin-product-validation"></div>
+
+                <div class="admin-product-form-grid">
+                    <div class="admin-product-field">
+                        <label asp-for="ProductName" class="form-label">Ten san pham</label>
+                        <input asp-for="ProductName" class="form-control" placeholder="Ten san pham" />
+                        <span asp-validation-for="ProductName" class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-product-field">
+                        <label asp-for="Price" class="form-label">Gia ban</label>
+                        <input asp-for="Price"
+                               class="form-control"
+                               type="number"
+                               min="0"
+                               step="0.01"
+                               placeholder="45000" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-product-field">
+                        <label asp-for="CategoryId" class="form-label">Category</label>
+                        <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId">
+                            <option value="">Chon category cho san pham</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-product-field admin-product-field-wide">
+                        <label asp-for="Description" class="form-label">Mo ta ngan</label>
+                        <textarea asp-for="Description"
+                                  class="form-control"
+                                  rows="5"
+                                  placeholder="Cap nhat mui vi, diem nhan va ly do khach nen chon san pham nay."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="admin-product-field admin-product-field-wide">
+                        <label class="form-label">Thay anh moi</label>
+                        <div class="admin-product-upload admin-product-upload-static">
+                            <input type="file" name="file" id="fileInput" class="d-none" accept="image/*" />
+                            <button type="button" id="uploadTrigger" class="admin-secondary-button admin-product-upload-button">
+                                <i class="fas fa-image"></i>
+                                <span>Chon anh moi</span>
+                            </button>
+                            <p class="mb-1">Neu khong chon anh khac, he thong se giu nguyen hinh hien tai.</p>
+                            <small id="fileHint">Dang dung anh hien tai.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-product-form-actions">
+                    <a asp-action="Index" class="admin-secondary-button">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Quay lai</span>
+                    </a>
+                    <button type="submit" class="admin-primary-button">
+                        <i class="fas fa-save"></i>
+                        <span>Luu thay doi</span>
+                    </button>
+                </div>
+            </form>
+        </article>
+
+        <aside class="admin-product-preview-card">
+            <div class="admin-product-preview-media">
+                <img id="previewImage" src="@imageUrl" alt="@productName" />
             </div>
 
-            <!-- MÔ TẢ -->
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
+            <div class="admin-product-preview-body">
+                <span class="admin-product-eyebrow">Current product</span>
+                <strong>@productName</strong>
+                <p>Khung nay hien anh hien tai cua product. Khi ban doi file moi, preview se thay doi ngay de de so sanh.</p>
             </div>
 
-            <!-- ẢNH HIỆN TẠI -->
-            <div class="mb-3 text-center">
-                <label class="form-label d-block">Ảnh hiện tại</label>
-                <img id="previewImage"
-                     src="@Model.ImageUrl"
-                     style="width:120px; height:120px; object-fit:cover; border-radius:10px; border:1px solid #ddd;" />
+            <div class="admin-product-side-list">
+                <div class="admin-product-side-item">
+                    <strong>ID san pham</strong>
+                    <p>#@Model.ProductId</p>
+                </div>
+                <div class="admin-product-side-item">
+                    <strong>Gia hien tai</strong>
+                    <p>@Model.Price.ToString("N0") đ</p>
+                </div>
+                <div class="admin-product-side-item">
+                    <strong>Category hien tai</strong>
+                    <p>@(ViewBag.CategoryName ?? "Co the cap nhat trong o chon category")</p>
+                </div>
             </div>
-
-            <!-- UPLOAD ẢNH -->
-            <div class="mb-3">
-                <label class="form-label">Chọn ảnh mới</label>
-                <input type="file" name="file" id="fileInput"
-                       class="form-control" accept="image/*" />
-            </div>
-
-            <!-- DANH MỤC -->
-            <div class="mb-3">
-                <label asp-for="CategoryId" class="form-label"></label>
-                <select asp-for="CategoryId"
-                        class="form-control"
-                        asp-items="ViewBag.CategoryId"></select>
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
-            </div>
-
-            <!-- BUTTON -->
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    💾 Lưu
-                </button>
-
-                <a asp-action="Index" class="btn btn-secondary w-100">
-                    ↩️ Quay lại
-                </a>
-            </div>
-
-        </form>
-    </div>
+        </aside>
+    </section>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        const fileInput = document.getElementById("fileInput");
-        const preview = document.getElementById("previewImage");
+        (function () {
+            const fileInput = document.getElementById("fileInput");
+            const uploadTrigger = document.getElementById("uploadTrigger");
+            const preview = document.getElementById("previewImage");
+            const fileHint = document.getElementById("fileHint");
+            const priceInput = document.querySelector("input[name='Price']");
 
-        // preview ảnh
-        fileInput.addEventListener("change", function (e) {
-            const file = e.target.files[0];
-
-            if (!file) return;
-
-            if (!file.type.startsWith("image/")) {
-                alert("Chỉ được chọn file ảnh!");
-                fileInput.value = "";
-                return;
+            if (uploadTrigger && fileInput) {
+                uploadTrigger.addEventListener("click", () => fileInput.click());
             }
 
-            const url = URL.createObjectURL(file);
-            preview.src = url;
-        });
+            if (fileInput && preview && fileHint) {
+                fileInput.addEventListener("change", function (event) {
+                    const file = event.target.files[0];
 
-        // chặn nhập giá âm
-        const priceInput = document.querySelector("input[name='Price']");
-        if (priceInput) {
-            priceInput.addEventListener("input", function () {
-                if (this.value < 0) this.value = 0;
-            });
-        }
+                    if (!file) {
+                        return;
+                    }
+
+                    if (!file.type.startsWith("image/")) {
+                        alert("Chi duoc chon file anh.");
+                        fileInput.value = "";
+                        fileHint.textContent = "Dang dung anh hien tai.";
+                        return;
+                    }
+
+                    preview.src = URL.createObjectURL(file);
+                    fileHint.textContent = file.name;
+                });
+            }
+
+            if (priceInput) {
+                priceInput.addEventListener("input", function () {
+                    if (Number(this.value) < 0) {
+                        this.value = 0;
+                    }
+                });
+            }
+        })();
     </script>
 }

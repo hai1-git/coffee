@@ -24,8 +24,9 @@
                             <a asp-controller="Products"
                                asp-action="Details"
                                asp-route-id="@item.Id"
-                               class="badge bg-white text-dark p-2 px-3 rounded-pill shadow-sm text-decoration-none">
-                                <i class="fas fa-search me-1 text-warning"></i> Chi tiết
+                               class="product-quick-view">
+                                <i class="fas fa-eye mr-2"></i>
+                                <span>Xem nhanh</span>
                             </a>
                         </div>
                     </div>
@@ -51,8 +52,8 @@
                         </div>
 
                         <!-- QTY -->
-                        <div class="input-group mb-3">
-                            <button class="btn btn-outline-secondary btn-minus">-</button>
+                        <div class="input-group mb-3 product-quantity-group">
+                            <button type="button" class="btn btn-minus product-qty-btn">-</button>
 
                             <input type="text"
                                    class="form-control text-center quantity-input"
@@ -61,15 +62,16 @@
                                    value="1"
                                    inputmode="numeric">
 
-                            <button class="btn btn-outline-secondary btn-plus">+</button>
+                            <button type="button" class="btn btn-plus product-qty-btn">+</button>
                         </div>
 
                         <!-- BUTTON -->
                         <div class="d-grid gap-2">
 
-                            <button class="btn btn-coffee shadow-sm fw-bold btn-add-cart"
+                            <button class="btn btn-add-cart product-action product-action-primary"
                                     data-productid="@item.Id">
-                                <i class="fas fa-cart-plus me-2"></i> THÊM GIỎ HÀNG
+                                <i class="fas fa-cart-plus mr-2"></i>
+                                <span>Them vao gio</span>
                             </button>
 
                             <form id="buy-now-featured-@item.Id"
@@ -78,8 +80,9 @@
                                   method="get"
                                   class="m-0">
                                 <input type="hidden" name="productId" value="@item.Id" />
-                                <button type="submit" class="btn btn-outline-dark shadow-sm fw-bold w-100">
-                                    THANH TOÁN NGAY
+                                <button type="submit" class="btn product-action product-action-accent w-100">
+                                    <i class="fas fa-bolt mr-2"></i>
+                                    <span>Thanh toan ngay</span>
                                 </button>
                             </form>
 

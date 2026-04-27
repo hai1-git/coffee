@@ -1,3 +1,6 @@
+using Coffee.Helper;
+using System;
+
 namespace Coffee.ViewModel
 {
     public class OrderHistoryItemViewModel
@@ -21,5 +24,17 @@ namespace Coffee.ViewModel
         public decimal TotalAmount { get; set; }
 
         public int TotalItems { get; set; }
+
+        public bool IsCodPayment =>
+            string.Equals(PaymentMethod, "COD", StringComparison.OrdinalIgnoreCase);
+
+        public bool IsMomoPayment => 
+            string.Equals(PaymentMethod, "MoMo", StringComparison.OrdinalIgnoreCase);
+
+        public bool CanCancel =>
+            OrderStatusHelper.CanCustomerCancelOrder(Status, PaymentStatus);
+
+        public bool IsCancelled =>
+            OrderStatusHelper.IsCancelled(Status);
     }
 }

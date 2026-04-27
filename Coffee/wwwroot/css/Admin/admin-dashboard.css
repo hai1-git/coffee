@@ -37,7 +37,7 @@
 }
 
 .admin-stat-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-bottom: 1rem;
 }
 
@@ -87,6 +87,10 @@
 
 .admin-panel {
     padding: 1.3rem;
+}
+
+.admin-panel-cod {
+    margin-bottom: 1rem;
 }
 
 .admin-panel-wide {
@@ -179,6 +183,82 @@
     border: 1px dashed rgba(93, 60, 34, 0.18);
 }
 
+.admin-cod-list {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.admin-cod-card {
+    padding: 1.05rem;
+    border-radius: 20px;
+    background: #fffdfa;
+    border: 1px solid rgba(93, 60, 34, 0.08);
+}
+
+.admin-cod-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.95rem;
+}
+
+.admin-cod-card-top strong {
+    display: block;
+    margin-bottom: 0.22rem;
+    color: #2d1f19;
+}
+
+.admin-cod-card-top small {
+    color: #817164;
+}
+
+.admin-cod-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.95rem;
+}
+
+.admin-cod-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.9rem 0.95rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(93, 60, 34, 0.08);
+}
+
+.admin-cod-meta-item span {
+    color: #8a775f;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-cod-meta-item strong {
+    color: #2d1f19;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.admin-cod-meta-item-wide {
+    grid-column: 1 / -1;
+}
+
+.admin-cod-approve-form {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.admin-cod-approve-form .btn {
+    min-height: 44px;
+    padding-inline: 1rem;
+    border-radius: 999px;
+}
+
 @media (max-width: 1199.98px) {
     .admin-stat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -217,6 +297,16 @@
     .admin-list-row {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .admin-cod-card-top,
+    .admin-cod-approve-form {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-cod-meta-grid {
+        grid-template-columns: 1fr;
     }
 
     .admin-chart-wrap,
