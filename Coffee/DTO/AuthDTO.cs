@@ -23,8 +23,12 @@ namespace Coffee.DTO
 
     public class LoginDTO
     {
-        [Required(ErrorMessage = "Username không được để trống")]
-        public string Username { get; set; } = string.Empty;
+        //[Required(ErrorMessage = "Username không được để trống")]
+        //public string Username { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+        [RegularExpression(@"^[a-zA-Z0-9._%+-]+@gmail\.com$", ErrorMessage = "Chỉ chấp nhận đuôi là gmail.com")]
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mật khẩu không được để trống")]
         public string Password { get; set; } = string.Empty;

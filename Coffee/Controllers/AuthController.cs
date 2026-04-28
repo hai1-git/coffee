@@ -49,12 +49,12 @@ namespace Coffee.Controllers
                     return View(dto);
                 }
 
-                // check username
-                if (db.Users.Any(x => x.UserName == dto.Username))
-                {
-                    ModelState.AddModelError("Username", "Username đã tồn tại!");
-                    return View(dto);
-                }
+                //// check username
+                //if (db.Users.Any(x => x.UserName == dto.Username))
+                //{
+                //    ModelState.AddModelError("Username", "Username đã tồn tại!");
+                //    return View(dto);
+                //}
 
                 var user = new User
                 {
@@ -93,7 +93,7 @@ namespace Coffee.Controllers
             if (!ModelState.IsValid)
                 return View(dto);
 
-            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.UserName == dto.Username || x.Email == dto.Username);
+            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.Email == dto.Email);
 
             if (user == null || user.Password == null || !hasher.Verify(user, user.Password, dto.Password))
             {
