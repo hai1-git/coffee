@@ -28,9 +28,12 @@ internal class Program
         //options.UseSqlServer(myConnectionString));
 
         builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
         builder.Services.Configure<MomoPaymentSettings>(builder.Configuration.GetSection("MomoPaymentSettings"));
         builder.Services.Configure<MomoBusinessSettings>(builder.Configuration.GetSection("MomoBusinessSettings"));
+
         builder.Services.AddTransient<EmailService>();
+
         builder.Services.AddHttpClient<MomoBusinessService>();
 
         // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
@@ -47,6 +50,10 @@ internal class Program
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(10); // ⏱ 10 phút
                 //options.SlidingExpiration = false; // ❌ không tự gia hạn
                 options.SlidingExpiration = true;  //Nếu muốn user không bị out khi đang dùng
+
+                options.Cookie.HttpOnly = true;                             // ✅ THÊM: JS không đọc được
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;   // ✅ THÊM: chỉ gửi qua HTTPS
+                options.Cookie.SameSite = SameSiteMode.Strict;             // ✅ THÊM: chống CSRF : nếu trang khác cố tình gửi request đến server của mình thì cookie sẽ không được gửi đi, trừ khi request đó đến từ chính domain của mình
             });
 
         builder.Services.Configure<ForwardedHeadersOptions>(options =>

@@ -93,7 +93,7 @@ namespace Coffee.Controllers
             if (!ModelState.IsValid)
                 return View(dto);
 
-            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.UserName == dto.Username || x.Email == dto.Username);
+            var user = db.Users.AsNoTracking().FirstOrDefault(x => x.Email == dto.Email);
 
             if (user == null || user.Password == null || !hasher.Verify(user, user.Password, dto.Password))
             {
@@ -135,7 +135,7 @@ namespace Coffee.Controllers
                 principal,
                 new AuthenticationProperties
                 {
-                    IsPersistent = true,
+                    IsPersistent = true, // lưu cookie lâu dài (đến khi user logout hoặc cookie hết hạn)
                     ExpiresUtc = DateTime.UtcNow.AddMinutes(10) // ⏱ 10 phút
                 }
             );

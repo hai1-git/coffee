@@ -57,27 +57,27 @@
                     <div class="navbar-nav coffee-nav-links mx-auto">
                         <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(isHome ? "active" : null)">
                             <i class="fas fa-home"></i>
-                            <span>Trang chu</span>
+                            <span>Trang chủ</span>
                         </a>
                         <a asp-controller="Home" asp-action="About" class="nav-item nav-link @(isAbout ? "active" : null)">
                             <i class="fas fa-book-open"></i>
-                            <span>Gioi thieu</span>
+                            <span>Giới thiệu</span>
                         </a>
                         <a asp-controller="Home" asp-action="Service" class="nav-item nav-link @(isService ? "active" : null)">
                             <i class="fas fa-concierge-bell"></i>
-                            <span>Dich vu</span>
+                            <span>Dịch Vụ</span>
                         </a>
                         <a asp-controller="Products" asp-action="Index" class="nav-item nav-link @(isProducts ? "active" : null)">
                             <i class="fas fa-mug-hot"></i>
-                            <span>Thuc don</span>
+                            <span>Thực Đơn</span>
                         </a>
                         <a asp-controller="Home" asp-action="Reservation" class="nav-item nav-link @(isReservation ? "active" : null)">
                             <i class="fas fa-calendar-check"></i>
-                            <span>Dat ban</span>
+                            <span>Đặt Bàn</span>
                         </a>
                         <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link @(isContact ? "active" : null)">
                             <i class="fas fa-envelope"></i>
-                            <span>Lien he</span>
+                            <span>Liên Hệ</span>
                         </a>
                     </div>
 
@@ -86,18 +86,18 @@
                     {
                         <a asp-controller="Auth" asp-action="Register" class="coffee-action-pill coffee-action-soft @(isRegister ? "active" : null)">
                             <i class="fas fa-user-plus"></i>
-                            <span>Dang ky</span>
+                            <span>Đăng ký</span>
                         </a>
                         <a asp-controller="Auth" asp-action="Login" class="coffee-action-pill @(isLogin ? "active" : null)">
                             <i class="fas fa-sign-in-alt"></i>
-                            <span>Dang nhap</span>
+                            <span>Đăng Nhập</span>
                         </a>
                     }
                     else
                     {
                         <a asp-controller="Cart" asp-action="Index" class="coffee-action-pill coffee-cart-pill @(isCart ? "active" : null)">
                             <i class="fas fa-shopping-bag"></i>
-                            <span>Gio hang</span>
+                            <span>Giỏ Hàng</span>
                             <span class="badge bg-danger cart-count">0</span>
                         </a>
 
@@ -109,7 +109,7 @@
                                 <span class="coffee-user-avatar">@userInitial</span>
                                 <span class="coffee-user-copy">
                                     <strong>@shortUserName</strong>
-                                    <small>Tai khoan</small>
+                                    <small>Tài Khoản</small>
                                 </span>
                             </a>
 
