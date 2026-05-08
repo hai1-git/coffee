@@ -11,6 +11,9 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+        builder.WebHost.UseUrls($"http://+:{port}");
+
         // =========================
         // 🔥 ADD SERVICES
         // =========================
