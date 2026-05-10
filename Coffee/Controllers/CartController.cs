@@ -33,22 +33,19 @@ namespace Coffee.Controllers
         {
             int userId = GetUserId();
 
-            quantity = Math.Max(1, Math.Min(99, quantity));
+            if (quantity < 1)
+                return Json(new { success = false, message = "Số lượng phải lớn hơn 0!" });
 
-            var cartItems = db.Carts.Where(x => x.UserId == userId);
+            if (quantity > 99)
+                return Json(new { success = false, message = "Tối đa 99 cái mỗi loại sản phẩm!" });
 
-            var item = cartItems.FirstOrDefault(x => x.ProductId == productId);
+            var item = db.Carts.FirstOrDefault(x => x.UserId == userId && x.ProductId == productId);
 
             if (item == null)
             {
-                if (cartItems.Count() >= 99)
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        message = "Giỏ hàng tối đa 99 loại sản phẩm!"
-                    });
-                }
+                int totalTypes = db.Carts.Count(x => x.UserId == userId);
+                if (totalTypes >= 99)
+                    return Json(new { success = false, message = "Giỏ hàng đã đạt tối đa 99 loại! Vui lòng xoá bớt trước khi thêm." });
 
                 db.Carts.Add(new Cart
                 {
@@ -59,16 +56,21 @@ namespace Coffee.Controllers
             }
             else
             {
-                item.Quantity = Math.Min(99, (item.Quantity ?? 0) + quantity);
+                int newQuantity = (item.Quantity ?? 0) + quantity;
+
+                if (newQuantity > 99)
+                    return Json(new { success = false, message = $"Món này đã có {item.Quantity} cái. Không thể thêm {quantity} nữa (tối đa 99 cái/món)!" });
+
+                item.Quantity = newQuantity;
             }
 
             db.SaveChanges();
 
-            return Json(new
-            {
-                success = true,
-                cartCount = cartItems.Count()
-            });
+            int cartCount = db.Carts
+                .Where(x => x.UserId == userId)
+                .Sum(x => (int?)x.Quantity) ?? 0;
+
+            return Json(new { success = true, cartCount, message = "Thêm vào giỏ hàng thành công!" });
         }
 
         // =========================
@@ -147,7 +149,6 @@ namespace Coffee.Controllers
 
             return Json(BuildCartResponse(userId, productId, quantity));
         }
-
         // =========================
         // 🗑 REMOVE
         // =========================
@@ -168,7 +169,9 @@ namespace Coffee.Controllers
             return Json(new
             {
                 success = true,
-                cartCount = db.Carts.Count(x => x.UserId == userId),
+                cartCount = db.Carts
+                    .Where(x => x.UserId == userId)
+                    .Sum(x => (int?)x.Quantity) ?? 0, // ✅ thay .Count()
                 total = GetCartTotal(userId)
             });
         }
@@ -181,9 +184,11 @@ namespace Coffee.Controllers
         {
             int userId = GetUserId();
 
-            int count = db.Carts.Count(x => x.UserId == userId);
+            int totalQuantity = db.Carts
+                .Where(x => x.UserId == userId)
+                .Sum(x => (int?)x.Quantity) ?? 0;
 
-            return Json(new { count });
+            return Json(new { count = totalQuantity });
         }
 
         // =========================
@@ -210,11 +215,15 @@ namespace Coffee.Controllers
                 .Select(x => x.Price)
                 .FirstOrDefault();
 
+            int cartCount = db.Carts
+        .Where(x => x.UserId == userId)
+        .Sum(x => (int?)x.Quantity) ?? 0; // ✅ tổng số lượng
+
             return new
             {
-                quantity = quantity,
+                quantity,
                 subTotal = price * quantity,
-                cartCount = db.Carts.Count(x => x.UserId == userId),
+                cartCount,
                 total = GetCartTotal(userId)
             };
         }

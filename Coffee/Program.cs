@@ -12,8 +12,8 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // port cho render ////
-        var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-        builder.WebHost.UseUrls($"http://+:{port}");
+        //var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+        //builder.WebHost.UseUrls($"http://+:{port}");
 
         // =========================
         // 🔥 ADD SERVICES
@@ -36,7 +36,7 @@ internal class Program
         builder.Services.Configure<MomoPaymentSettings>(builder.Configuration.GetSection("MomoPaymentSettings"));
         builder.Services.Configure<MomoBusinessSettings>(builder.Configuration.GetSection("MomoBusinessSettings"));
 
-        builder.Services.AddTransient<EmailService>();
+        builder.Services.AddTransient<EmailService>(); // đăng ký dịch vụ email
 
         builder.Services.AddHttpClient<MomoBusinessService>();
 

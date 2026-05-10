@@ -98,13 +98,8 @@
         let productId = $(this).data("productid");
         let quantity = parseInt(container.find(".quantity-input").val()) || 1;
 
-        // 🔥 chặn max 99 loại
-        let currentCount = parseInt($(".cart-count").text()) || 0;
+       
 
-        if (currentCount >= 99) {
-            alert("Giỏ hàng đã đạt tối đa 99 loại sản phẩm. Vui lòng xoá bớt!");
-            return;
-        }
 
         // =========================
         // 🚀 AJAX ADD
@@ -121,9 +116,9 @@
                 if (res.success) {
 
                     $(".cart-count").text(res.cartCount);
-
-                    // 👉 chuyển trang giỏ
-                    window.location.href = "/Cart";
+                    alert(res.message);
+                    //// 👉 chuyển trang giỏ
+                    //window.location.href = "/Cart";
 
                 } else {
 
@@ -135,7 +130,7 @@
                 // 🔥 CHƯA LOGIN
                 if (xhr.status === 401) {
                     alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
-                    window.location.href = "/Auth/Login";
+                    //window.location.href = "/Auth/Login";
                 }
                 else {
                     alert("Thêm giỏ hàng thất bại!");
