@@ -7,7 +7,7 @@ namespace Coffee.ViewModel
     {
         public int OrderId { get; set; }
 
-        public DateTime OrderDate { get; set; }
+        public DateTimeOffset OrderDate { get; set; }
 
         public string ReceiverName { get; set; } = string.Empty;
 

@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 public class AdminController : Controller
 {
     private const string CashOnDelivery = OrderStatusHelper.CodPaymentMethod;
-    private const string MomoPaymentMethod = "MOMO";
 
     private readonly CoffeeShopDbContext db;
 
@@ -20,26 +19,15 @@ public class AdminController : Controller
 
     public IActionResult Index()
     {
-        var now = DateTime.UtcNow;
-        var firstMonth = new DateTime(now.Year, now.Month, 1).AddMonths(-5);
+        var now = AppTimeHelper.VietnamNow;
+        var firstMonth = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, now.Offset).AddMonths(-5);
+        var fallbackOrderDate = AppTimeHelper.UtcNow;
         var unpaidStatusNormalized = OrderStatusHelper.UnpaidStatus.ToUpperInvariant();
-        var paidStatusNormalized = OrderStatusHelper.PaidStatus.ToUpperInvariant();
 
         var totalProducts = db.Products.AsNoTracking().Count();
         var totalCategories = db.Categories.AsNoTracking().Count();
         var totalOrders = db.Orders.AsNoTracking().Count();
         var totalCustomers = db.Users.AsNoTracking().Count(x => x.RoleId != 1);
-        var totalRevenue = db.Orders.AsNoTracking().Sum(x => x.TotalAmount) ?? 0;
-        var pendingOrders = db.Orders.AsNoTracking()
-            .Count(x => (x.Status ?? OrderStatusHelper.UnpaidStatus).ToUpper() == unpaidStatusNormalized);
-        var pendingCodOrders = db.Orders
-            .AsNoTracking()
-            .Where(x => (x.Status ?? OrderStatusHelper.UnpaidStatus).ToUpper() == unpaidStatusNormalized)
-            .Count(x => x.Payments.Any(p => (p.PaymentMethod ?? string.Empty).ToUpper() == CashOnDelivery));
-        var paidMomoOrders = db.Payments
-            .AsNoTracking()
-            .Count(x => (x.PaymentMethod ?? string.Empty).ToUpper() == MomoPaymentMethod
-                && (x.PaymentStatus ?? string.Empty).ToUpper() == paidStatusNormalized);
 
         var categoryStats = db.Categories
             .AsNoTracking()
@@ -67,34 +55,71 @@ public class AdminController : Controller
             .Select(x => new
             {
                 x.OrderId,
-                OrderDate = x.OrderDate ?? DateTime.UtcNow,
+                OrderDate = x.OrderDate ?? fallbackOrderDate,
                 Status = x.Status ?? OrderStatusHelper.UnpaidStatus,
+                PaymentMethod = x.Payments
+                    .OrderBy(payment => payment.PaymentId)
+                    .Select(payment => payment.PaymentMethod)
+                    .FirstOrDefault() ?? CashOnDelivery,
+                PaymentStatus = x.Payments
+                    .OrderBy(payment => payment.PaymentId)
+                    .Select(payment => payment.PaymentStatus)
+                    .FirstOrDefault() ?? OrderStatusHelper.UnpaidStatus,
                 TotalAmount = x.TotalAmount ?? 0,
                 CustomerName = !string.IsNullOrEmpty(x.ReceiverName)
                     ? x.ReceiverName
                     : x.User != null ? x.User.UserName ?? "Khach hang" : "Khach hang"
             })
+            .AsEnumerable()
+            .Select(x => new
+            {
+                x.OrderId,
+                x.OrderDate,
+                LocalOrderDate = AppTimeHelper.ToVietnamTime(x.OrderDate),
+                Status = OrderStatusHelper.NormalizeOrderStatus(x.Status, x.PaymentStatus),
+                PaymentMethod = x.PaymentMethod,
+                PaymentStatus = OrderStatusHelper.NormalizePaymentStatus(x.PaymentStatus, x.Status),
+                x.TotalAmount,
+                x.CustomerName,
+                IsCompletedSale = OrderStatusHelper.IsCompletedSale(x.Status, x.PaymentStatus)
+            })
             .ToList();
+
+        var successfulOrderRows = orderRows
+            .Where(x => x.IsCompletedSale)
+            .ToList();
+
+        var totalRevenue = successfulOrderRows.Sum(x => x.TotalAmount);
+        var pendingOrders = orderRows.Count(x => OrderStatusHelper.IsUnpaid(x.Status));
+        var pendingCodOrders = orderRows.Count(x =>
+            OrderStatusHelper.IsUnpaid(x.Status) &&
+            OrderStatusHelper.IsCodPaymentMethod(x.PaymentMethod));
+        var paidMomoOrders = orderRows.Count(x =>
+            x.IsCompletedSale &&
+            OrderStatusHelper.IsMomoPaymentMethod(x.PaymentMethod));
 
         var monthlyStats = Enumerable.Range(0, 6)
             .Select(offset =>
             {
                 var month = firstMonth.AddMonths(offset);
                 var monthOrders = orderRows
-                    .Where(x => x.OrderDate.Year == month.Year && x.OrderDate.Month == month.Month)
+                    .Where(x => x.LocalOrderDate.Year == month.Year && x.LocalOrderDate.Month == month.Month)
+                    .ToList();
+                var successfulMonthOrders = monthOrders
+                    .Where(x => x.IsCompletedSale)
                     .ToList();
 
                 return new AdminMonthlyStatViewModel
                 {
                     Label = $"T{month.Month:00}/{month.Year}",
                     OrderCount = monthOrders.Count,
-                    Revenue = monthOrders.Sum(x => x.TotalAmount)
+                    Revenue = successfulMonthOrders.Sum(x => x.TotalAmount)
                 };
             })
             .ToList();
 
         var orderStatusStats = orderRows
-            .GroupBy(x => string.IsNullOrWhiteSpace(x.Status) ? OrderStatusHelper.UnpaidStatus : x.Status.Trim())
+            .GroupBy(x => x.Status)
             .Select(group => new AdminChartItemViewModel
             {
                 Label = group.Key,
@@ -103,23 +128,26 @@ public class AdminController : Controller
             .OrderByDescending(x => x.Value)
             .ToList();
 
-        var topProducts = db.OrderDetails
+        var successfulOrderIds = SalesAnalyticsHelper.GetSuccessfulOrderIds(db);
+        var productSales = SalesAnalyticsHelper.GetSuccessfulProductSales(db, successfulOrderIds);
+        var productNames = db.Products
             .AsNoTracking()
-            .Select(detail => new
+            .Select(product => new
             {
-                ProductName = detail.Product != null
-                    ? detail.Product.ProductName ?? "San pham"
-                    : "San pham",
-                Quantity = detail.Quantity ?? 0,
-                Revenue = (detail.Price ?? 0) * (detail.Quantity ?? 0)
+                product.ProductId,
+                ProductName = product.ProductName ?? "San pham"
             })
             .ToList()
-            .GroupBy(x => x.ProductName)
-            .Select(group => new AdminTopProductViewModel
+            .ToDictionary(product => product.ProductId, product => product.ProductName);
+
+        var topProducts = productSales.Values
+            .Select(summary => new AdminTopProductViewModel
             {
-                ProductName = group.Key,
-                QuantitySold = group.Sum(x => x.Quantity),
-                Revenue = group.Sum(x => x.Revenue)
+                ProductName = productNames.TryGetValue(summary.ProductId, out var productName)
+                    ? productName
+                    : "San pham",
+                QuantitySold = summary.QuantitySold,
+                Revenue = summary.Revenue
             })
             .OrderByDescending(x => x.QuantitySold)
             .ThenByDescending(x => x.Revenue)
@@ -158,7 +186,7 @@ public class AdminController : Controller
                     .Select(p => p.PaymentStatus)
                     .FirstOrDefault() ?? OrderStatusHelper.UnpaidStatus,
                 TotalAmount = x.TotalAmount ?? 0,
-                OrderDate = x.OrderDate ?? DateTime.UtcNow
+                OrderDate = x.OrderDate ?? fallbackOrderDate
             })
             .Take(8)
             .ToList();
@@ -170,7 +198,7 @@ public class AdminController : Controller
             TotalOrders = totalOrders,
             TotalCustomers = totalCustomers,
             TotalRevenue = totalRevenue,
-            AverageOrderValue = totalOrders > 0 ? Math.Round(totalRevenue / totalOrders, 0) : 0,
+            AverageOrderValue = successfulOrderRows.Count > 0 ? Math.Round(totalRevenue / successfulOrderRows.Count, 0) : 0,
             PendingOrders = pendingOrders,
             PendingCodOrders = pendingCodOrders,
             PaidMomoOrders = paidMomoOrders,

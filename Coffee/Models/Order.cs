@@ -19,7 +19,7 @@ public partial class Order
 
     public string? Status { get; set; }
 
-    public DateTime? OrderDate { get; set; }
+    public DateTimeOffset? OrderDate { get; set; }
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 

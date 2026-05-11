@@ -11,16 +11,20 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // port cho render ////
-        //var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-        //builder.WebHost.UseUrls($"http://+:{port}");
+        // Chi ep port khi deploy co bien PORT (Render).
+        // Local thi de Visual Studio / launchSettings quan ly URL.
+        var port = Environment.GetEnvironmentVariable("PORT");
+        if (!string.IsNullOrWhiteSpace(port))
+        {
+            builder.WebHost.UseUrls($"http://+:{port}");
+        }
 
         // =========================
-        // 🔥 ADD SERVICES
+        // ADD SERVICES
         // =========================
         builder.Services.AddControllersWithViews();
 
-        // 👉 DB
+        // DB
         var myConnectionString = builder.Configuration.GetConnectionString("MyConnectString");
         if (string.IsNullOrWhiteSpace(myConnectionString))
         {
@@ -32,32 +36,27 @@ internal class Program
         //options.UseSqlServer(myConnectionString));
 
         builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-
         builder.Services.Configure<MomoPaymentSettings>(builder.Configuration.GetSection("MomoPaymentSettings"));
         builder.Services.Configure<MomoBusinessSettings>(builder.Configuration.GetSection("MomoBusinessSettings"));
 
-        builder.Services.AddTransient<EmailService>(); // đăng ký dịch vụ email
-
+        builder.Services.AddTransient<EmailService>();
         builder.Services.AddHttpClient<MomoBusinessService>();
-
-        // 🔥 ADD CLOUDINARY SERVICE Ở ĐÂY
         builder.Services.AddSingleton<CloudinaryService>();
 
         // =========================
-        // 🔐 COOKIE AUTH (QUAN TRỌNG)
+        // COOKIE AUTH
         // =========================
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
                 options.LoginPath = "/Auth/Login";
                 options.AccessDeniedPath = "/Auth/Login";
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(10); // ⏱ 10 phút
-                //options.SlidingExpiration = false; // ❌ không tự gia hạn
-                options.SlidingExpiration = true;  //Nếu muốn user không bị out khi đang dùng
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+                options.SlidingExpiration = true;
 
-                options.Cookie.HttpOnly = true;                             // ✅ THÊM: JS không đọc được
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;   // ✅ THÊM: chỉ gửi qua HTTPS
-                options.Cookie.SameSite = SameSiteMode.Strict;             // ✅ THÊM: chống CSRF : nếu trang khác cố tình gửi request đến server của mình thì cookie sẽ không được gửi đi, trừ khi request đó đến từ chính domain của mình
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Strict;
             });
 
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -69,37 +68,12 @@ internal class Program
 
         var app = builder.Build();
 
+        DateTimeOffsetSchemaInitializer.EnsureAsync(app.Services).GetAwaiter().GetResult();
         PasswordResetSchemaInitializer.EnsureAsync(app.Services).GetAwaiter().GetResult();
         OrderStatusDataInitializer.EnsureAsync(app.Services).GetAwaiter().GetResult();
 
-        //using (var scope = app.Services.CreateScope())
-        //{
-        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-        //    db.Database.Migrate();
-        //}
-
         // =========================
-        // 🔥 SEED DATA (THÊM Ở ĐÂY)
-        // =========================
-        //using (var scope = app.Services.CreateScope())
-        //{
-        //    var db = scope.ServiceProvider.GetRequiredService<CoffeeShopDbContext>();
-
-        //    db.Database.Migrate(); // đảm bảo tạo DB trước
-
-        //    if (!db.Roles.Any())
-        //    {
-        //        db.Roles.AddRange(
-        //            new Role { RoleName = "Admin" },
-        //            new Role { RoleName = "User" }
-        //        );
-
-        //        db.SaveChanges();
-        //    }
-        //}
-
-        // =========================
-        // ⚙️ PIPELINE
+        // PIPELINE
         // =========================
         if (!app.Environment.IsDevelopment())
         {
@@ -112,11 +86,7 @@ internal class Program
         app.UseStaticFiles();
 
         app.UseRouting();
-
-        // =========================
-        // 🔥 THỨ TỰ QUAN TRỌNG
-        // =========================
-        app.UseAuthentication();   // ❗ PHẢI CÓ
+        app.UseAuthentication();
         app.UseAuthorization();
 
         // =========================
@@ -126,8 +96,6 @@ internal class Program
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
-
-        // những đường link nào của trang k tồn tại sẽ bay zo đây
         app.MapFallbackToController("NotFound", "Home");
         app.Run();
     }

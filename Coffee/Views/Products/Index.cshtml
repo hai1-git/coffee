@@ -5,20 +5,25 @@
 }
 
 <div class="product-layout mt-4">
-    @* loại sản phẩm *@
     <div class="sidebar">
-        @await Component.InvokeAsync("Categories", Model)
+        <div class="sidebar-stack">
+            <section class="sidebar-panel">
+                @await Component.InvokeAsync("Categories")
+            </section>
 
-        @* sản phẩm đang cực hot *@
-        <h2 class="text-center mt-5">Sản phẩm cực hot</h2>
-        @await Component.InvokeAsync("Products", new { count = 1 })
+            <section class="sidebar-panel sidebar-panel-spotlight">
+                <div class="sidebar-spotlight-head">
+                    <span class="sidebar-kicker">Best seller</span>
+                    <h2>San pham cuc hot</h2>
+                    <p>Mon dang duoc khach quay lai goi nhieu nhat trong thoi gian gan day.</p>
+                </div>
 
+                @await Component.InvokeAsync("Products", new { count = 1 })
+            </section>
+        </div>
     </div>
-    
-        @* sản phẩm *@
-        @await Html.PartialAsync("_Products", Model)
 
-  
+    @await Html.PartialAsync("_Products", Model)
 
 </div>
 @section Scripts {

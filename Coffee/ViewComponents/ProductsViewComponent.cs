@@ -1,5 +1,6 @@
 ﻿using Coffee.Data;
 using Coffee.DTO;
+using Coffee.Helper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,18 +16,26 @@ namespace Coffee.ViewComponents
         }
         public IViewComponentResult Invoke(int count =4)
         {
+            var productSales = SalesAnalyticsHelper.GetSuccessfulProductSales(db);
+
             var products = db.Products
-                .OrderByDescending(p => p.Price) // Sắp xếp giá cao → thấp
-                .Take(count) // Lấy 4 sản phẩm
+                .AsNoTracking()
                 .Select(p => new ProductDTO
                 {
                     Id = p.ProductId,
-                    ProductName = p.ProductName,
-                    Price = (decimal)(p.Price),
-                    Description = p.Description,
+                    ProductName = p.ProductName ?? string.Empty,
+                    Price = p.Price,
+                    Description = p.Description ?? string.Empty,
                     ImageUrl = p.ImageUrl ?? string.Empty
-                }).ToList();
-                
+                })
+                .ToList()
+                .OrderByDescending(product =>
+                    productSales.TryGetValue(product.Id, out var sales) ? sales.QuantitySold : 0)
+                .ThenByDescending(product =>
+                    productSales.TryGetValue(product.Id, out var sales) ? sales.Revenue : 0)
+                .ThenByDescending(product => product.Id)
+                .Take(count)
+                .ToList();
 
             return View(products);
         }

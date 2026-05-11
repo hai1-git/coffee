@@ -68,7 +68,7 @@ namespace Coffee.ViewModel
 
         public decimal TotalAmount { get; set; }
 
-        public DateTime OrderDate { get; set; }
+        public DateTimeOffset OrderDate { get; set; }
     }
 
     public class AdminPendingCodOrderViewModel
@@ -87,6 +87,6 @@ namespace Coffee.ViewModel
 
         public decimal TotalAmount { get; set; }
 
-        public DateTime OrderDate { get; set; }
+        public DateTimeOffset OrderDate { get; set; }
     }
 }

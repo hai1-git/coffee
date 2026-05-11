@@ -1,32 +1,72 @@
 ﻿@model IEnumerable<Coffee.DTO.CategoryDTO>
+@using System
+@using System.Linq
 @{
     ViewData["Title"] = "Default";
+    var selectedCategory = ViewContext.HttpContext.Request.Query["loai"].ToString();
 }
 
 <div class="category-wrapper">
-    <h4 class="category-title">☕ Danh Mục</h4>
+    <div class="category-header">
+        <div>
+            <span class="category-kicker">Coffee menu</span>
+            <h4 class="category-title">Danh Muc</h4>
+            <p class="category-intro">Chon nhanh nhom mon ban muon de loc menu gon hon, de tim hon.</p>
+        </div>
+        <span class="category-badge">@Model.Count()</span>
+    </div>
 
-    <ul class="category-list">
-        @foreach (var c in Model)
-        {
-            <li class="category-item">
-                <a asp-controller="Products"
-                   asp-action="Index"
-                   asp-route-loai="@c.Id"
-                   class="category-link">
+    <div class="category-summary">
+        <span><i class="fas fa-layer-group mr-2"></i>@Model.Count() nhom do uong</span>
+        <span><i class="fas fa-fire mr-2"></i>Hot item duoc day len dau</span>
+    </div>
 
-                    <span class="icon">
-                        <i class="fas fa-coffee"></i>
-                    </span>
+    <a asp-controller="Products"
+       asp-action="Index"
+       class="category-link category-link-all @(string.IsNullOrWhiteSpace(selectedCategory) ? "is-active" : null)">
+        <span class="category-icon-shell">
+            <i class="fas fa-th-large"></i>
+        </span>
 
-                    <span class="name">@c.Name</span>
+        <span class="category-copy">
+            <span class="name">Tat ca mon</span>
+            <small>Xem toan bo thuc don cua quan</small>
+        </span>
 
-                    <span class="arrow">
-                        <i class="fas fa-chevron-right"></i>
-                    </span>
+        <span class="arrow">
+            <i class="fas fa-chevron-right"></i>
+        </span>
+    </a>
 
-                </a>
-            </li>
-        }
-    </ul>
+    <div class="category-list-shell">
+        <ul class="category-list">
+            @foreach (var c in Model)
+            {
+                var isActive = string.Equals(selectedCategory, c.Id.ToString(), StringComparison.OrdinalIgnoreCase);
+                var description = string.IsNullOrWhiteSpace(c.Description)
+                    ? "Nhom do uong duoc goi nhieu"
+                    : c.Description;
+
+                <li class="category-item">
+                    <a asp-controller="Products"
+                       asp-action="Index"
+                       asp-route-loai="@c.Id"
+                       class="category-link @(isActive ? "is-active" : null)">
+                        <span class="category-icon-shell">
+                            <i class="fas fa-mug-hot"></i>
+                        </span>
+
+                        <span class="category-copy">
+                            <span class="name">@c.Name</span>
+                            <small>@description</small>
+                        </span>
+
+                        <span class="arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
 </div>

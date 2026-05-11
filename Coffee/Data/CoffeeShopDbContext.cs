@@ -35,6 +35,10 @@ public partial class CoffeeShopDbContext : DbContext
  
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var providerName = Database.ProviderName ?? string.Empty;
+        var isSqlServer = providerName.Contains("SqlServer", StringComparison.OrdinalIgnoreCase);
+        var isNpgsql = providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase);
+
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey(e => e.CartId).HasName("PK__Cart__51BCD7B78CE3E0C9");
@@ -62,9 +66,20 @@ public partial class CoffeeShopDbContext : DbContext
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCFD629F690");
 
-            entity.Property(e => e.OrderDate)
-                  .HasColumnType("timestamp with time zone")
-                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            var orderDateProperty = entity.Property(e => e.OrderDate);
+            if (isSqlServer)
+            {
+                orderDateProperty
+                    .HasColumnType("datetimeoffset")
+                    .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            }
+            else if (isNpgsql)
+            {
+                orderDateProperty
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            }
+
             entity.Property(e => e.ReceiverName).HasMaxLength(100);
             entity.Property(e => e.ReceiverPhone).HasMaxLength(20);
             entity.Property(e => e.ShippingAddress).HasMaxLength(300);
@@ -134,15 +149,33 @@ public partial class CoffeeShopDbContext : DbContext
             entity.HasIndex(e => e.UserName, "UQ_Users_UserName").IsUnique();
 
             entity.Property(e => e.Address).HasMaxLength(200);
-            entity.Property(e => e.CreatedAt)
-                  .HasColumnType("timestamp with time zone")
-                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            var createdAtProperty = entity.Property(e => e.CreatedAt);
+            if (isSqlServer)
+            {
+                createdAtProperty
+                    .HasColumnType("datetimeoffset")
+                    .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+            }
+            else if (isNpgsql)
+            {
+                createdAtProperty
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+            }
+
             entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
             entity.Property(e => e.LockReason).HasMaxLength(200);
             entity.Property(e => e.Password).HasMaxLength(255);
-            entity.Property(e => e.PasswordResetCodeExpiresAt).HasColumnType("timestamp with time zone");
+            if (isSqlServer)
+            {
+                entity.Property(e => e.PasswordResetCodeExpiresAt).HasColumnType("datetimeoffset");
+            }
+            else if (isNpgsql)
+            {
+                entity.Property(e => e.PasswordResetCodeExpiresAt).HasColumnType("timestamp with time zone");
+            }
             entity.Property(e => e.PasswordResetCodeHash).HasMaxLength(128);
             entity.Property(e => e.Phone).HasMaxLength(20);
             entity.Property(e => e.UserName).HasMaxLength(15);

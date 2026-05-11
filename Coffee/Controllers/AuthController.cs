@@ -63,7 +63,7 @@ namespace Coffee.Controllers
                     RoleId = 2,
                     IsActive = true,
                     IsLocked = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = AppTimeHelper.UtcNow
                 };
                 
                 // hash password
@@ -136,7 +136,7 @@ namespace Coffee.Controllers
                 new AuthenticationProperties
                 {
                     IsPersistent = true, // lưu cookie lâu dài (đến khi user logout hoặc cookie hết hạn)
-                    ExpiresUtc = DateTime.UtcNow.AddMinutes(10) // ⏱ 10 phút
+                    ExpiresUtc = AppTimeHelper.UtcNow.AddMinutes(10) // ⏱ 10 phút
                 }
             );
 
@@ -165,7 +165,7 @@ namespace Coffee.Controllers
                     var verificationCode = GenerateResetCode();
 
                     user.PasswordResetCodeHash = HashResetCode(verificationCode);
-                    user.PasswordResetCodeExpiresAt = DateTime.UtcNow.AddMinutes(10);
+                    user.PasswordResetCodeExpiresAt = AppTimeHelper.UtcNow.AddMinutes(10);
 
                     db.SaveChanges();
 
@@ -203,7 +203,7 @@ namespace Coffee.Controllers
             if (user == null ||
                 string.IsNullOrWhiteSpace(user.PasswordResetCodeHash) ||
                 user.PasswordResetCodeExpiresAt == null ||
-                user.PasswordResetCodeExpiresAt < DateTime.UtcNow ||
+                user.PasswordResetCodeExpiresAt < AppTimeHelper.UtcNow ||
                 user.PasswordResetCodeHash != HashResetCode(dto.VerificationCode.Trim()))
             {
                 ModelState.AddModelError(string.Empty, "Ma xac nhan khong hop le hoac da het han.");

@@ -156,7 +156,7 @@ namespace Coffee.Controllers
                     ShippingAddress = checkoutModel.ShippingAddress,
                     TotalAmount = checkoutModel.Total,
                     Status = OrderStatusHelper.UnpaidStatus,
-                    OrderDate = DateTime.UtcNow
+                    OrderDate = AppTimeHelper.UtcNow
                 };
 
                 db.Orders.Add(order);

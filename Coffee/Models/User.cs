@@ -25,11 +25,11 @@ public partial class User
 
     public string? LockReason { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
 
     public string? PasswordResetCodeHash { get; set; }
 
-    public DateTime? PasswordResetCodeExpiresAt { get; set; }
+    public DateTimeOffset? PasswordResetCodeExpiresAt { get; set; }
 
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 

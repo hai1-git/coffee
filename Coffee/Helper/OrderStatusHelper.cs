@@ -88,6 +88,16 @@ namespace Coffee.Helper
             return string.Equals(paymentMethod, MomoPaymentMethod, StringComparison.OrdinalIgnoreCase);
         }
 
+        public static bool IsCompletedSale(string? orderStatus, string? paymentStatus = null)
+        {
+            if (MatchesCancelled(orderStatus) || MatchesCancelled(paymentStatus))
+            {
+                return false;
+            }
+
+            return MatchesCompletedSale(orderStatus) || MatchesCompletedSale(paymentStatus);
+        }
+
         private static bool MatchesCancelled(string? status)
         {
             return IsAnyStatus(status,
@@ -104,6 +114,14 @@ namespace Coffee.Helper
                 "Da thanh toan MoMo",
                 "Da gui yeu cau xac nhan",
                 "Cho shop xac nhan thanh toan");
+        }
+
+        private static bool MatchesCompletedSale(string? status)
+        {
+            return IsAnyStatus(status,
+                PaidStatus,
+                "Da duyet COD",
+                "Da thanh toan MoMo");
         }
 
         private static bool IsAnyStatus(string? value, params string[] candidates)

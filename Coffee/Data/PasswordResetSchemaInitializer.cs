@@ -20,7 +20,7 @@ namespace Coffee.Data
 
                     IF COL_LENGTH('Users', 'PasswordResetCodeExpiresAt') IS NULL
                     BEGIN
-                        ALTER TABLE [Users] ADD [PasswordResetCodeExpiresAt] DATETIME2 NULL;
+                        ALTER TABLE [Users] ADD [PasswordResetCodeExpiresAt] DATETIMEOFFSET NULL;
                     END;
                     """);
 

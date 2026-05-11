@@ -32,6 +32,7 @@ namespace Coffee.Controllers
         public IActionResult Index()
         {
             var userId = GetUserId();
+            var fallbackOrderDate = AppTimeHelper.UtcNow;
             if (userId <= 0)
             {
                 return RedirectToAction("Login", "Auth");
@@ -47,7 +48,7 @@ namespace Coffee.Controllers
                 .Select(order => new OrderHistoryItemViewModel
                 {
                     OrderId = order.OrderId,
-                    OrderDate = order.OrderDate ?? DateTime.UtcNow,
+                    OrderDate = order.OrderDate ?? fallbackOrderDate,
 
                     ReceiverName = !string.IsNullOrEmpty(order.ReceiverName)
                         ? order.ReceiverName
@@ -92,6 +93,7 @@ namespace Coffee.Controllers
         public IActionResult Details(int id)
         {
             var userId = GetUserId();
+            var fallbackOrderDate = AppTimeHelper.UtcNow;
             if (userId <= 0)
             {
                 return RedirectToAction("Login", "Auth");
@@ -107,7 +109,7 @@ namespace Coffee.Controllers
                 .Select(order => new OrderDetailViewModel
                 {
                     OrderId = order.OrderId,
-                    OrderDate = order.OrderDate ?? DateTime.UtcNow,
+                    OrderDate = order.OrderDate ?? fallbackOrderDate,
 
                     ReceiverName = !string.IsNullOrEmpty(order.ReceiverName)
                         ? order.ReceiverName

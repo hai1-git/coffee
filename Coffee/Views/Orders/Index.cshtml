@@ -101,7 +101,7 @@
                                     <div class="order-history-grid">
                                         <div class="order-meta-item">
                                             <span>Ngay dat</span>
-                                            <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                            <strong>@AppTimeHelper.ToVietnamTime(order.OrderDate).ToString("dd/MM/yyyy HH:mm")</strong>
                                         </div>
 
                                         <div class="order-meta-item">
@@ -186,7 +186,7 @@
                                     <div class="order-history-grid">
                                         <div class="order-meta-item">
                                             <span>Ngay dat</span>
-                                            <strong>@order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>
+                                            <strong>@AppTimeHelper.ToVietnamTime(order.OrderDate).ToString("dd/MM/yyyy HH:mm")</strong>
                                         </div>
 
                                         <div class="order-meta-item">

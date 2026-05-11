@@ -16,8 +16,8 @@ namespace Coffee.ViewComponents
                 var categories = db.Categories.Select(c => new DTO.CategoryDTO
                 {
                     Id = c.CategoryId,
-                    Name = c.CategoryName,
-                    Description = c.Description
+                    Name = c.CategoryName ?? string.Empty,
+                    Description = c.Description ?? string.Empty
                 }).ToList();
                 return View(categories);
 
