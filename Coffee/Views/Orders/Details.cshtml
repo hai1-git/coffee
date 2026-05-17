@@ -1,5 +1,7 @@
 @model Coffee.ViewModel.OrderDetailViewModel
 @using Coffee.Helper
+@using Coffee.Util;
+
 @{
     Layout = "_ProductsCoffee";
     var totalQuantity = Model.Items.Sum(x => x.Quantity);
@@ -67,7 +69,7 @@
 
                     <div class="order-summary-item">
                         <span>Ngay dat</span>
-                        <strong>@AppTimeHelper.ToVietnamTime(Model.OrderDate).ToString("dd/MM/yyyy HH:mm")</strong>
+                        <strong>@AppTimeHelper.ConvertTo(Model.OrderDate, TimeZoneConstants.Vietnam).ToString("dd/MM/yyyy HH:mm")</strong>
                     </div>
 
                     <div class="order-summary-item">

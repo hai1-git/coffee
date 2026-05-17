@@ -1,48 +1,46 @@
 ﻿@{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-    var title = "Kham pha Koppee";
-    var subtitle = "Di chuyen giua thuc don, gio hang va don hang trong cung mot khu vuc dieu huong gon gang.";
-
+    var title = "Khám phá Koppee";
+    var subtitle = "Di chuyển giữa thực đơn, giỏ hàng và đơn hàng trong cùng một khu vực điều hướng gọn gàng.";
     if (string.Equals(currentController, "Products", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Thuc don hom nay";
-        subtitle = "Loc mon nhanh hon, tim dung huong vi ban muon va chuyen trang khong bi mat huong dieu huong.";
+        title = "Thực đơn hôm nay";
+        subtitle = "Lọc món nhanh hơn, tìm đúng hương vị bạn muốn và chuyển trang không bị mất hướng điều hướng.";
     }
     else if (string.Equals(currentController, "Products", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Search", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Ket qua tim kiem";
-        subtitle = "So sanh cac mon ngay trong danh sach va tiep tuc tim kiem ma khong can quay lai dau trang.";
+        title = "Kết quả tìm kiếm";
+        subtitle = "So sánh các món ngay trong danh sách và tiếp tục tìm kiếm mà không cần quay lại đầu trang.";
     }
     else if (string.Equals(currentController, "Products", StringComparison.OrdinalIgnoreCase) && string.Equals(currentAction, "Details", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Chi tiet san pham";
-        subtitle = "Xem nhanh thong tin mon, quay lai thuc don hoac chuyen sang gio hang de dat mua.";
+        title = "Chi tiết sản phẩm";
+        subtitle = "Xem nhanh thông tin món, quay lại thực đơn hoặc chuyển sang giỏ hàng để đặt mua.";
     }
     else if (string.Equals(currentController, "Cart", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Gio hang";
-        subtitle = "Kiem tra mon da chon, chinh sua so luong va di tiep sang buoc thanh toan that nhanh.";
+        title = "Giỏ hàng";
+        subtitle = "Kiểm tra món đã chọn, chỉnh sửa số lượng và đi tiếp sang bước thanh toán thật nhanh.";
     }
     else if (string.Equals(currentController, "Checkout", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Thanh toan";
-        subtitle = "Thong tin giao hang va cach thanh toan duoc gom gon de ban xac nhan don de hon.";
+        title = "Thanh toán";
+        subtitle = "Thông tin giao hàng và cách thanh toán được gom gọn để bạn xác nhận đơn dễ hơn.";
     }
     else if (string.Equals(currentController, "Orders", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Quan ly don hang";
-        subtitle = "Theo doi trang thai don, xem lai chi tiet va quay ve menu mua sam bat ky luc nao.";
+        title = "Quản lý đơn hàng";
+        subtitle = "Theo dõi trạng thái đơn, xem lại chi tiết và quay về menu mua sắm bất kỳ lúc nào.";
     }
     else if (string.Equals(currentController, "Admin", StringComparison.OrdinalIgnoreCase)
         || string.Equals(currentController, "AdminProducts", StringComparison.OrdinalIgnoreCase)
         || string.Equals(currentController, "Categories", StringComparison.OrdinalIgnoreCase))
     {
-        title = "Khu vuc quan tri";
-        subtitle = "Thanh dieu huong duoc giu thong nhat de viec quay lai dashboard va menu luon thuan tay.";
+        title = "Khu vực quản trị";
+        subtitle = "Thanh điều hướng được giữ thống nhất để việc quay lại dashboard và menu luôn thuận tay.";
     }
 }
-
 <section class="coffee-page-toolbar">
     <div class="coffee-page-toolbar-shell">
         <div class="coffee-toolbar-copy">
@@ -50,26 +48,24 @@
             <h1>@title</h1>
             <p>@subtitle</p>
         </div>
-
         <div class="coffee-toolbar-links">
             <a asp-controller="Home" asp-action="Index" class="coffee-toolbar-link">
                 <i class="fas fa-home"></i>
-                <span>Trang chu</span>
+                <span>Trang chủ</span>
             </a>
             <a asp-controller="Products" asp-action="Index" class="coffee-toolbar-link">
                 <i class="fas fa-mug-hot"></i>
-                <span>Thuc don</span>
+                <span>Thực đơn</span>
             </a>
             <a asp-controller="Cart" asp-action="Index" class="coffee-toolbar-link">
                 <i class="fas fa-shopping-cart"></i>
-                <span>Gio hang</span>
+                <span>Giỏ hàng</span>
             </a>
             <a asp-controller="Orders" asp-action="Index" class="coffee-toolbar-link">
                 <i class="fas fa-receipt"></i>
-                <span>Don hang</span>
+                <span>Đơn hàng</span>
             </a>
         </div>
-
         <div class="coffee-toolbar-search">
             @await Html.PartialAsync("~/Views/Products/_Search.cshtml")
         </div>

@@ -1,42 +1,42 @@
-namespace Coffee.Helper
+﻿namespace Coffee.Helper
 {
     public static class AppTimeHelper
     {
-        private static readonly TimeZoneInfo VietnamTimeZone = ResolveVietnamTimeZone();
-
+        // ===========================
+        // 🕐 UTC
+        // ===========================
         public static DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 
-        public static DateTimeOffset VietnamNow => TimeZoneInfo.ConvertTime(UtcNow, VietnamTimeZone);
-
-        public static DateTimeOffset ToVietnamTime(DateTimeOffset value)
+        // ===========================
+        // 🌐 DYNAMIC
+        // ===========================
+        public static DateTimeOffset NowAt(string timezoneId)
         {
-            var utcValue = value.Offset == TimeSpan.Zero ? value : value.ToUniversalTime();
-            return TimeZoneInfo.ConvertTime(utcValue, VietnamTimeZone);
+            var tz = ResolveTimeZone(timezoneId);
+            return TimeZoneInfo.ConvertTime(UtcNow, tz);
         }
 
-        private static TimeZoneInfo ResolveVietnamTimeZone()
+        public static DateTimeOffset ConvertTo(DateTimeOffset value, string timezoneId)
         {
-            var timezoneIds = new[]
-            {
-                "SE Asia Standard Time",
-                "Asia/Ho_Chi_Minh",
-                "Asia/Saigon"
-            };
+            var tz = ResolveTimeZone(timezoneId);
+            var utc = value.Offset == TimeSpan.Zero ? value : value.ToUniversalTime();
+            return TimeZoneInfo.ConvertTime(utc, tz);
+        }
 
-            foreach (var timezoneId in timezoneIds)
+        // ===========================
+        // 🔧 INTERNAL
+        // ===========================
+        private static TimeZoneInfo ResolveTimeZone(params string[] timezoneIds)
+        {
+            foreach (var id in timezoneIds)
             {
                 try
                 {
-                    return TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+                    return TimeZoneInfo.FindSystemTimeZoneById(id);
                 }
-                catch (TimeZoneNotFoundException)
-                {
-                }
-                catch (InvalidTimeZoneException)
-                {
-                }
+                catch (TimeZoneNotFoundException) { }
+                catch (InvalidTimeZoneException) { }
             }
-
             return TimeZoneInfo.Utc;
         }
     }

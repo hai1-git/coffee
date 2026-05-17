@@ -1,5 +1,6 @@
 @model Coffee.ViewModel.OrderHistoryViewModel
 @using Coffee.Helper
+@using Coffee.Util
 @using System.Linq
 @{
     Layout = "_ProductsCoffee";
@@ -101,7 +102,7 @@
                                     <div class="order-history-grid">
                                         <div class="order-meta-item">
                                             <span>Ngay dat</span>
-                                            <strong>@AppTimeHelper.ToVietnamTime(order.OrderDate).ToString("dd/MM/yyyy HH:mm")</strong>
+                                            <strong>@AppTimeHelper.ConvertTo(order.OrderDate, TimeZoneConstants.Vietnam).ToString("dd/MM/yyyy HH:mm")</strong>
                                         </div>
 
                                         <div class="order-meta-item">
@@ -186,7 +187,7 @@
                                     <div class="order-history-grid">
                                         <div class="order-meta-item">
                                             <span>Ngay dat</span>
-                                            <strong>@AppTimeHelper.ToVietnamTime(order.OrderDate).ToString("dd/MM/yyyy HH:mm")</strong>
+                                            <strong>@AppTimeHelper.ConvertTo(order.OrderDate, TimeZoneConstants.Vietnam).ToString("dd/MM/yyyy HH:mm")</strong>
                                         </div>
 
                                         <div class="order-meta-item">

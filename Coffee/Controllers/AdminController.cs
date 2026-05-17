@@ -1,5 +1,6 @@
 ﻿using Coffee.Data;
 using Coffee.Helper;
+using Coffee.Util;
 using Coffee.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class AdminController : Controller
 
     public IActionResult Index()
     {
-        var now = AppTimeHelper.VietnamNow;
+        var now = AppTimeHelper.NowAt("SE Asia Standard Time");
         var firstMonth = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, now.Offset).AddMonths(-5);
         var fallbackOrderDate = AppTimeHelper.UtcNow;
         var unpaidStatusNormalized = OrderStatusHelper.UnpaidStatus.ToUpperInvariant();
@@ -75,7 +76,7 @@ public class AdminController : Controller
             {
                 x.OrderId,
                 x.OrderDate,
-                LocalOrderDate = AppTimeHelper.ToVietnamTime(x.OrderDate),
+                LocalOrderDate = AppTimeHelper.NowAt(TimeZoneConstants.Vietnam),
                 Status = OrderStatusHelper.NormalizeOrderStatus(x.Status, x.PaymentStatus),
                 PaymentMethod = x.PaymentMethod,
                 PaymentStatus = OrderStatusHelper.NormalizePaymentStatus(x.PaymentStatus, x.Status),

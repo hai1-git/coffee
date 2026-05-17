@@ -34,6 +34,7 @@ document.addEventListener("click", function (e) {
 
     // 🗑 DELETE
     if (e.target.classList.contains("btn-delete")) {
+        if (!confirm("Bạn có chắc chắn muốn xoá không?")) return;
 
         fetch("/Cart/RemoveItem", {
             method: "POST",
@@ -42,13 +43,10 @@ document.addEventListener("click", function (e) {
         })
             .then(r => r.json())
             .then(res => {
-
                 if (res.success) {
                     row.remove();
-
                     let badge = document.querySelector(".cart-count");
                     if (badge) badge.innerText = res.cartCount;
-
                     updateTotal();
                 }
             });

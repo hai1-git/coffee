@@ -1,5 +1,6 @@
 ﻿using Coffee.Data;
 using Coffee.Helper;
+using Coffee.Util;
 using Coffee.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace Coffee.Controllers
         public IActionResult Index()
         {
             var userId = GetUserId();
-            var fallbackOrderDate = AppTimeHelper.UtcNow;
+            var fallbackOrderDate = AppTimeHelper.NowAt(TimeZoneConstants.Vietnam);
             if (userId <= 0)
             {
                 return RedirectToAction("Login", "Auth");
@@ -93,7 +94,7 @@ namespace Coffee.Controllers
         public IActionResult Details(int id)
         {
             var userId = GetUserId();
-            var fallbackOrderDate = AppTimeHelper.UtcNow;
+            var fallbackOrderDate = AppTimeHelper.NowAt(TimeZoneConstants.Vietnam);
             if (userId <= 0)
             {
                 return RedirectToAction("Login", "Auth");

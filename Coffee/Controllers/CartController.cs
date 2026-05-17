@@ -169,6 +169,7 @@ namespace Coffee.Controllers
             return Json(new
             {
                 success = true,
+                message = "Xoá khỏi giỏ hàng thành công!",
                 cartCount = db.Carts
                     .Where(x => x.UserId == userId)
                     .Sum(x => (int?)x.Quantity) ?? 0, // ✅ thay .Count()
