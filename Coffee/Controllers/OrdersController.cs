@@ -33,7 +33,7 @@ namespace Coffee.Controllers
         public IActionResult Index()
         {
             var userId = GetUserId();
-            var fallbackOrderDate = AppTimeHelper.NowAt(TimeZoneConstants.Vietnam);
+            var fallbackOrderDate = AppTimeHelper.UtcNow;
             if (userId <= 0)
             {
                 return RedirectToAction("Login", "Auth");
@@ -94,7 +94,7 @@ namespace Coffee.Controllers
         public IActionResult Details(int id)
         {
             var userId = GetUserId();
-            var fallbackOrderDate = AppTimeHelper.NowAt(TimeZoneConstants.Vietnam);
+            var fallbackOrderDate = AppTimeHelper.UtcNow;
             if (userId <= 0)
             {
                 return RedirectToAction("Login", "Auth");
