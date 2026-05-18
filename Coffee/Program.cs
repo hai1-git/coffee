@@ -50,7 +50,7 @@ internal class Program
             .AddCookie(options =>
             {
                 options.LoginPath = "/Auth/Login";
-                options.AccessDeniedPath = "/Auth/Login";
+                options.AccessDeniedPath = "/NotFound";
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
                 options.SlidingExpiration = true;
 

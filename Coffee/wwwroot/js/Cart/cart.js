@@ -45,10 +45,20 @@ document.addEventListener("click", function (e) {
             .then(res => {
                 if (res.success) {
                     row.remove();
+
                     let badge = document.querySelector(".cart-count");
                     if (badge) badge.innerText = res.cartCount;
+
                     updateTotal();
+
+                    // ✅ Hiển thị toast xoá thành công
+                    showToast("Đã xoá sản phẩm khỏi giỏ hàng!", "success");
+                } else {
+                    showToast("Xoá thất bại, vui lòng thử lại!", "error");
                 }
+            })
+            .catch(() => {
+                showToast("Có lỗi xảy ra, vui lòng thử lại!", "error");
             });
     }
 });

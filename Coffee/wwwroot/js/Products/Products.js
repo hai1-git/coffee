@@ -92,14 +92,9 @@
     // 🛒 ADD TO CART
     // =========================
     $(document).on("click", ".btn-add-cart", function () {
-
         let container = getContainer(this);
-
         let productId = $(this).data("productid");
         let quantity = parseInt(container.find(".quantity-input").val()) || 1;
-
-       
-
 
         // =========================
         // 🚀 AJAX ADD
@@ -112,32 +107,21 @@
                 quantity: quantity
             },
             success: function (res) {
-
                 if (res.success) {
-
                     $(".cart-count").text(res.cartCount);
-                    alert(res.message);
-                    //// 👉 chuyển trang giỏ
-                    //window.location.href = "/Cart";
-
+                    showToast(res.message || "Đã thêm vào giỏ hàng!", "success");
                 } else {
-
-                    alert(res.message || "Không thể thêm giỏ hàng!");
+                    showToast(res.message || "Không thể thêm vào giỏ hàng!", "error");
                 }
             },
             error: function (xhr) {
-
-                // 🔥 CHƯA LOGIN
                 if (xhr.status === 401) {
-                    alert("Vui lòng đăng nhập để thêm vào giỏ hàng!");
-                    //window.location.href = "/Auth/Login";
-                }
-                else {
-                    alert("Thêm giỏ hàng thất bại!");
+                    showToast("Vui lòng đăng nhập để thêm vào giỏ hàng!", "warning");
+                } else {
+                    showToast("Thêm vào giỏ hàng thất bại!", "error");
                 }
             }
         });
-
     });
 
 });
